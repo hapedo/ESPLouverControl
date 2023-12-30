@@ -1,0 +1,32 @@
+<!DOCTYPE HTML><html>
+<head>
+  <title>Louver control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="default.css">
+</head>
+<body>
+    <div class="config">
+        <a href="/settings">&#x03C0</a>
+    </div>
+    <h2>Louver control</h2>
+    <div class="rect">
+    <button class="button" id="shortUp" onclick="buttonPressed(this)">&#9650;</button>
+    <button class="button" id="shortDown" onclick="buttonPressed(this)">&#9660;</button>
+    <br />
+    <button class="button" id="fullOpen" onclick="buttonPressed(this)">&#9650;&#9650;</button>
+    <button class="button" id="fullClose" onclick="buttonPressed(this)">&#9660;&#9660;</button>
+    <br />
+    <button class="button" id="fullCloseAndOpenLamellas" onclick="buttonPressed(this)">&#9660;&#9650;</button>
+    <br />
+    <button class="button" id="stop" onclick="buttonPressed(this)">Stop</button>
+    </div>
+    
+<script>
+function buttonPressed(element) {
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "/command?button=" + element.id, true);
+  xhr.send();
+}
+</script>
+</body>
+</html>

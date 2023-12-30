@@ -1,0 +1,47 @@
+<!DOCTYPE HTML><html>
+<head>
+  <title>Louver control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="default.css">
+</head>
+<body>
+    <h2>Louver control config</h2>
+    <h3>GPIO config</h3>
+    <div class="rect">
+        <form action="/gpioConfigSave" method="post" id="gpioConfig">
+            <label for="downGpio">Key down GPIO:</label>
+            <input type="text" name="downGpio" id = "downGpio" value="%KEY_DOWN_GPIO%">
+            <select id="downInvert" name="downInvert">
+                <option value="0" %SELECTED_DOWN_INVERTED_NO%>Active high</option>
+                <option value="1" %SELECTED_DOWN_INVERTED_YES%>Active low</option>
+            </select>
+            <br />
+            <label for="upGpio">Key up GPIO:</label>
+            <input type="text" name="upGpio" id = "upGpio" value="%KEY_UP_GPIO%">
+            <select id="upInvert" name="upInvert">
+                <option value="0" %SELECTED_UP_INVERTED_NO%>Active high</option>
+                <option value="1" %SELECTED_UP_INVERTED_YES%>Active low</option>
+            </select>
+            <br />
+            <label for="rdownGpio">Relay down GPIO:</label>
+            <input type="text" name="rdownGpio" id = "rdownGpio" value="%RELAY_DOWN_GPIO%">
+            <select id="rdownInvert" name="rdownInvert">
+                <option value="0" %SELECTED_RDOWN_INVERTED_NO%>Active high</option>
+                <option value="1" %SELECTED_RDOWN_INVERTED_YES%>Active low</option>
+            </select>
+            <br />            
+            <label for="rupGpio">Relay up GPIO:</label>
+            <input type="text" name="rupGpio" id = "rupGpio" value="%RELAY_UP_GPIO%">
+            <select id="rupInvert" name="rupInvert">
+                <option value="0" %SELECTED_RUP_INVERTED_NO%>Active high</option>
+                <option value="1" %SELECTED_RUP_INVERTED_YES%>Active low</option>
+            </select>
+            <br />
+            <button class="button" type="submit" form="gpioConfig" value="Submit">Save</button>                                       
+        </form>
+    </div>
+    <form action="/settings" id="back">
+        <button class="button" type="submit" form="back" value="Submit">Back to settings</button>                                       
+    </form>
+ </body>
+</html>

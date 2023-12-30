@@ -1,0 +1,31 @@
+<!DOCTYPE HTML><html>
+<head>
+  <title>Louver control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="default.css">
+</head>
+<body>
+    <h2>Louver control config</h2>
+    <h3>Timing config</h3>
+    <div class="rect">
+        <form action="/timingConfigSave" method="post" id="timeConfig">
+            <label for="timeFullOpen">Full open [s]:</label>
+            <input type="text" name="timeFullOpen" id="timeFullOpen" value="%TIME_FULL_OPEN%">
+            <br />
+            <label for="timeFullClose">Full close [s]:</label>
+            <input type="text" name="timeFullClose" id="timeFullClose" value="%TIME_FULL_CLOSE%">
+            <br />
+            <label for="timeShort">Short movement [s]:</label>
+            <input type="text" name="timeShort" id="timeShort" value="%TIME_SHORT%">
+            <br />
+            <label for="timeOpenLamellas">Open lamellas [s]:</label>
+            <input type="text" name="timeOpenLamellas" id="timeOpenLamellas" value="%TIME_OPEN_LAMELLAS%">
+            <br />
+            <button class="button" type="submit" form="timeConfig" value="Submit">Save</button>                                       
+        </form>
+    </div>
+    <form action="/settings" id="back">
+        <button class="button" type="submit" form="back" value="Submit">Back to settings</button>                                       
+    </form>
+</body>
+</html>

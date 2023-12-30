@@ -1,0 +1,41 @@
+<!DOCTYPE HTML><html>
+<head>
+  <title>Louver control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="default.css">
+</head>
+<body>
+    <h2>Louver control config</h2>
+    <h3>Network config</h3>
+    <div class="rect">
+        <form action="/networkConfigSave" method="post" id="networkConfig">
+            <label for="wifiMode">WIFI mode:</label>
+            <select id="wifiMode" name="wifiMode">
+                <option value="AP" %SELECTED_WIFI_MODE_AP%>AP</option>
+                <option value="client" %SELECTED_WIFI_MODE_CLIENT%>Client</option>
+            </select>
+            <br />
+            <label for="apSSID">AP SSID:</label>
+            <input type="text" name="apSSID" id = "apSSID" value="%NETWORK_SSID_AP%">
+            <br />
+            <label for="apPass">AP password:</label>
+            <input type="password" name="apPass" id="apPass" value="%NETWORK_PASS_AP%">
+            <br />
+            <label for="clientSSID">Client SSID:</label>
+            <input type="text" name="clientSSID" id="clientSSID" value="%NETWORK_SSID%">
+            <br />
+            <label for="clientPass">Client password:</label>
+            <input type="password" name="clientPass" id="clientPass" value="%NETWORK_PASS%">
+            <br />
+            <label for="mDNSHost">mDNS host:</label>
+            <input type="text" name="mDNSHost" id="mDNSHost" value="%NETWORK_MDNS_HOST%">
+            <br />
+            <button class="button" type="submit" form="networkConfig" value="Submit">Save</button>                                       
+        </form>
+    </div>
+    <br />
+    <form action="/settings" id="back">
+        <button class="button" type="submit" form="back" value="Submit">Back to settings</button>                                       
+    </form>
+</body>
+</html>

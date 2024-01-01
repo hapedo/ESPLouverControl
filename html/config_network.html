@@ -31,6 +31,12 @@
             <label for="mDNSHost">mDNS host:</label>
             <input type="text" name="mDNSHost" id="mDNSHost" value="%NETWORK_MDNS_HOST%">
             <br />
+            <label for="clientBehavior">Client behavior when cannot connect:</label>
+            <select id="clientBehavior" name="clientBehavior">
+                <option value="0" %SELECTED_CLIENT_BEHAVIOR_0%>1m in client, 5mins in AP</option>
+                <option value="1" %SELECTED_CLIENT_BEHAVIOR_1%>Permanent client</option>
+            </select>
+            <br />
             <button class="button" type="submit" form="networkConfig" value="Submit">Save</button>                                       
         </form>
     </div>

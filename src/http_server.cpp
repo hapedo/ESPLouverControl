@@ -33,7 +33,6 @@ public:
 };
 
 HttpServer::HttpServer() :
-    m_reboot(false),
     m_wifiConfig(WIFI_CONF_AP),
     m_wifiClientBehavior(WIFI_CLIENT_BEH_1MCLIENT_5MAP),
     m_wifiClientModeSwap(false),
@@ -166,6 +165,9 @@ void HttpServer::initPrivate()
         bool highRelayDown;
         Louver::getGpioConfig(Louver::DIR_UP, pinKeyUp, relayUp, highKeyUp, highRelayUp);
         Louver::getGpioConfig(Louver::DIR_DOWN, pinKeyDown, relayDown, highKeyDown, highRelayDown);
+        uint8_t pinKeyReset;
+        bool highKeyReset;
+        Module::getResetGpioConfig(pinKeyReset, highKeyReset);
         String value;
         if (request->hasParam("downGpio", true))
         {
@@ -211,8 +213,20 @@ void HttpServer::initPrivate()
             else
                 highRelayUp = true;
         }
+        if (request->hasParam("resetGpio", true))
+        {
+            pinKeyReset = request->getParam("resetGpio", true)->value().toInt();
+        }
+        if (request->hasParam("resetInvert", true))
+        {
+            if (request->getParam("resetInvert", true)->value() == "1")
+                highKeyReset = false;
+            else
+                highKeyReset = true;
+        }
         Louver::configureGpio(Louver::DIR_UP, pinKeyUp, relayUp, highKeyUp, highRelayUp);
         Louver::configureGpio(Louver::DIR_DOWN, pinKeyDown, relayDown, highKeyDown, highRelayDown);
+        Module::setResetGpioConfig(pinKeyReset, highKeyReset);
         request->send_P(200, "text/html", getHttpConfigSaved(), defaultProcessor);
     });
     m_server.on("/timingConfig", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -262,6 +276,7 @@ void HttpServer::initPrivate()
         getInstance().getConfig(oldWifiConfig, ssidAp, passAp, ssid, pass);
         wifiConfig = oldWifiConfig;
         String mdnsHost = Mdns::getHost();
+        WifiClientBehavior clientBehavior = getInstance().m_wifiClientBehavior;
         if (request->hasParam("wifiMode", true)) 
         {
             value = request->getParam("wifiMode", true)->value();
@@ -290,11 +305,18 @@ void HttpServer::initPrivate()
         {
             mdnsHost = request->getParam("mDNSHost", true)->value();
         }
-        getInstance().m_reboot = true;
-        getInstance().m_rebootTimeout = Time::nowRelativeMilli() + 3000;
+        if (request->hasParam("clientBehavior", true))
+        {
+            if (request->getParam("clientBehavior", true)->value() == "1")
+                clientBehavior = WIFI_CLIENT_BEH_STILL_CLIENT;
+            else
+                clientBehavior = WIFI_CLIENT_BEH_1MCLIENT_5MAP;
+        }
+        Module::reboot();
         configureAP(ssidAp.c_str(), passAp.c_str());
         configureClient(ssid.c_str(), pass.c_str());
         setWifiConfig(wifiConfig);
+        setWifiClientBehavior(clientBehavior);
         Mdns::configure(mdnsHost);
         Log::info("HTTP", "Network config changed - requesting reboot");    
         request->send_P(200, "text/html", getHttpNetworkConfigSaved(), defaultProcessor);
@@ -362,7 +384,7 @@ void HttpServer::initAsClient()
 
 void HttpServer::loadConfigPrivate()
 {
-    m_wifiConfig = (WifiConfig)Config::getInt("network/wifi_mode", WIFI_CONF_CLIENT);
+    m_wifiConfig = (WifiConfig)Config::getInt("network/wifi_mode", WIFI_CONF_AP);
     m_wifiClientBehavior = (WifiClientBehavior)Config::getInt("network/wifi_client_behavior", WIFI_CLIENT_BEH_1MCLIENT_5MAP);
     m_wifiClientModeSwap = Config::getBool("network/wifi_client_mode_swap", false);
     m_wifiSsidAp = Config::getString("network/ssid_ap", String(DEFAULT_SSID_AP) + "_" + String(Module::getChipId()));
@@ -400,6 +422,9 @@ String HttpServer::gpioConfigProcessor(const String& var)
     bool highRelayDown;
     Louver::getGpioConfig(Louver::DIR_UP, pinKeyUp, relayUp, highKeyUp, highRelayUp);
     Louver::getGpioConfig(Louver::DIR_DOWN, pinKeyDown, relayDown, highKeyDown, highRelayDown);
+    uint8_t pinKeyReset;
+    bool highKeyReset;
+    Module::getResetGpioConfig(pinKeyReset, highKeyReset);
     if (var == "KEY_DOWN_GPIO")
         return String(pinKeyDown);
     if (var == "KEY_UP_GPIO")
@@ -408,6 +433,8 @@ String HttpServer::gpioConfigProcessor(const String& var)
         return String(relayDown);
     if (var == "RELAY_UP_GPIO")
         return String(relayUp);
+    if (var == "KEY_RESET_GPIO")
+        return String(pinKeyReset);
     if ((var == "SELECTED_UP_INVERTED_YES") && (!highKeyUp))
         return "selected";
     if ((var == "SELECTED_UP_INVERTED_NO") && (highKeyUp))
@@ -423,6 +450,10 @@ String HttpServer::gpioConfigProcessor(const String& var)
     if ((var == "SELECTED_RDOWN_INVERTED_YES") && (!highRelayDown))
         return "selected";
     if ((var == "SELECTED_RDOWN_INVERTED_NO") && (highRelayDown))
+        return "selected";
+    if ((var == "SELECTED_KEY_RESET_INVERTED_YES") && (!highKeyReset))
+        return "selected";
+    if ((var == "SELECTED_KEY_RESET_INVERTED_NO") && (highKeyReset))
         return "selected";
     return defaultProcessor(var);
 }
@@ -461,6 +492,10 @@ String HttpServer::networkConfigProcessor(const String& var)
         return getInstance().m_wifiPassword;
     if (var == "NETWORK_MDNS_HOST")
         return Mdns::getHost();
+    if ((var == "SELECTED_CLIENT_BEHAVIOR_0") && (getInstance().m_wifiClientBehavior == WIFI_CLIENT_BEH_1MCLIENT_5MAP))
+        return "selected";
+    if ((var == "SELECTED_CLIENT_BEHAVIOR_1") && (getInstance().m_wifiClientBehavior == WIFI_CLIENT_BEH_STILL_CLIENT))
+        return "selected";
     return defaultProcessor(var);
 }
 
@@ -468,7 +503,7 @@ void HttpServer::process()
 {
     HttpServer& inst = getInstance();
     int status = WiFi.status();
-    if (!inst.m_reboot)
+    if (!Module::isRebootRequested())
     {
         if (status != inst.m_lastWifiStatus)
         {
@@ -517,25 +552,16 @@ void HttpServer::process()
                     Log::info("HTTP", "WIFI client mode swap timeout - swapping back to client mode");
                     Config::setBool("network/wifi_client_mode_swap", false);
                     Config::flush();
-                    getInstance().m_reboot = true;
-                    getInstance().m_rebootTimeout = Time::nowRelativeMilli() + 3000;
+                    Module::reboot();
                 }
                 else
                 {
                     Log::info("HTTP", "WIFI client mode swap timeout - swapping to AP mode");
                     Config::setBool("network/wifi_client_mode_swap", true);
                     Config::flush();
-                    getInstance().m_reboot = true;
-                    getInstance().m_rebootTimeout = Time::nowRelativeMilli() + 3000;
+                    Module::reboot();
                 }
             }
         }
-    }
-    // Reboot check
-    if ((inst.m_reboot) && (Time::nowRelativeMilli() >= inst.m_rebootTimeout))
-    {
-        Log::info("HTTP", "Reboot request - rebooting");
-        delay(1000);
-        ESP.restart();
     }
 }

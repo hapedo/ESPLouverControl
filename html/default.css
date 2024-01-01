@@ -43,16 +43,30 @@ a:hover {
     color: #000;
     text-decoration:none;
 }
-form#gpioConfig select, form#gpioConfig input, form#networkConfig input, form#networkConfig select, form#timeConfig input, form#moduleConfig input {
+form#gpioConfig select, form#gpioConfig input {
     width: 100px;
     height: 25px;
     background-color: #eeeeee;
     margin-bottom: 5px;
     border: 1px solid #000;
 }
-form#gpioConfig label, form#networkConfig label, form#timeConfig label, form#moduleConfig label {
+form#networkConfig input, form#networkConfig select, form#timeConfig input, form#moduleConfig input {
+    width: 200px;
+    height: 25px;
+    background-color: #eeeeee;
+    margin-bottom: 5px;
+    border: 1px solid #000;
+}
+form#gpioConfig label {
     font-size: 0.9rem;
     width: 140px;
+    text-align: left;
+    display:inline-block;
+    margin-bottom: 5px;
+}
+form#networkConfig label, form#timeConfig label, form#moduleConfig label {
+    font-size: 0.9rem;
+    width: 240px;
     text-align: left;
     display:inline-block;
     margin-bottom: 5px;

@@ -19,6 +19,7 @@ void setup() {
 
 void loop() 
 {
+    Module::process();
     Louver::process();
     HttpServer::process();
     Mdns::process();

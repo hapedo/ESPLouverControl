@@ -12,9 +12,9 @@ public:
 
     static constexpr const char* DEFAULT_PASSWORD_AP = "";
 
-    static constexpr const char* DEFAULT_SSID = "HapNet";
+    static constexpr const char* DEFAULT_SSID = "MyNetwork";
 
-    static constexpr const char* DEFAULT_PASSWORD = "todd5lon";
+    static constexpr const char* DEFAULT_PASSWORD = "password";
 
     enum WifiConfig
     {
@@ -74,8 +74,6 @@ private:
 
     static String networkConfigProcessor(const String& var);
 
-    bool m_reboot;
-    uint64_t m_rebootTimeout;
     WifiConfig m_wifiConfig;
     WifiClientBehavior m_wifiClientBehavior;
     bool m_wifiClientModeSwap;

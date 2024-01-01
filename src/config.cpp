@@ -28,6 +28,16 @@ void Config::flush()
     eepromStream.flush();
 }
 
+void Config::clearAll()
+{
+    Log::info("Config", "Clearing configuration");
+    EEPROM.begin(MAX_JSON_SIZE);
+    for(size_t i = 0; i < MAX_JSON_SIZE; i++)
+        EEPROM.write(i, 0);
+    EEPROM.end();
+    EEPROM.begin(MAX_JSON_SIZE);
+}
+
 void Config::setInt(const char* key, int value)
 {
     getInstance().m_json[key] = value;

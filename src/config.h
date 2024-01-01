@@ -11,6 +11,8 @@ public:
 
     static void flush();
 
+    static void clearAll();
+
     static void setInt(const char* key, int value);
 
     static void setString(const char* key, String value);

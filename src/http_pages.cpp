@@ -47,16 +47,30 @@ a:hover {
     color: #000;
     text-decoration:none;
 }
-form#gpioConfig select, form#gpioConfig input, form#networkConfig input, form#networkConfig select, form#timeConfig input, form#moduleConfig input {
+form#gpioConfig select, form#gpioConfig input {
     width: 100px;
     height: 25px;
     background-color: #eeeeee;
     margin-bottom: 5px;
     border: 1px solid #000;
 }
-form#gpioConfig label, form#networkConfig label, form#timeConfig label, form#moduleConfig label {
+form#networkConfig input, form#networkConfig select, form#timeConfig input, form#moduleConfig input {
+    width: 200px;
+    height: 25px;
+    background-color: #eeeeee;
+    margin-bottom: 5px;
+    border: 1px solid #000;
+}
+form#gpioConfig label {
     font-size: 0.9rem;
     width: 140px;
+    text-align: left;
+    display:inline-block;
+    margin-bottom: 5px;
+}
+form#networkConfig label, form#timeConfig label, form#moduleConfig label {
+    font-size: 0.9rem;
+    width: 240px;
     text-align: left;
     display:inline-block;
     margin-bottom: 5px;
@@ -168,6 +182,13 @@ const char* httpGpioConfig PROGMEM = R"rawliteral(
                 <option value="1" %SELECTED_RUP_INVERTED_YES%>Active low</option>
             </select>
             <br />
+            <label for="resetGpio">Reset key GPIO:</label>
+            <input type="text" name="resetGpio" id = "resetGpio" value="%KEY_RESET_GPIO%">
+            <select id="resetInvert" name="resetInvert">
+                <option value="0" %SELECTED_KEY_RESET_INVERTED_NO%>Active high</option>
+                <option value="1" %SELECTED_KEY_RESET_INVERTED_YES%>Active low</option>
+            </select>
+            <br />
             <button class="button" type="submit" form="gpioConfig" value="Submit">Save</button>                                       
         </form>
     </div>
@@ -248,6 +269,12 @@ const char* httpNetworkConfig PROGMEM = R"rawliteral(
             <br />
             <label for="mDNSHost">mDNS host:</label>
             <input type="text" name="mDNSHost" id="mDNSHost" value="%NETWORK_MDNS_HOST%">
+            <br />
+            <label for="clientBehavior">Client behavior when cannot connect:</label>
+            <select id="clientBehavior" name="clientBehavior">
+                <option value="0" %SELECTED_CLIENT_BEHAVIOR_0%>1m in client, 5mins in AP</option>
+                <option value="1" %SELECTED_CLIENT_BEHAVIOR_1%>Permanent client</option>
+            </select>
             <br />
             <button class="button" type="submit" form="networkConfig" value="Submit">Save</button>                                       
         </form>

@@ -38,6 +38,13 @@
                 <option value="1" %SELECTED_RUP_INVERTED_YES%>Active low</option>
             </select>
             <br />
+            <label for="resetGpio">Reset key GPIO:</label>
+            <input type="text" name="resetGpio" id = "resetGpio" value="%KEY_RESET_GPIO%">
+            <select id="resetInvert" name="resetInvert">
+                <option value="0" %SELECTED_KEY_RESET_INVERTED_NO%>Active high</option>
+                <option value="1" %SELECTED_KEY_RESET_INVERTED_YES%>Active low</option>
+            </select>
+            <br />
             <button class="button" type="submit" form="gpioConfig" value="Submit">Save</button>                                       
         </form>
     </div>

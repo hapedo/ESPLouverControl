@@ -51,9 +51,9 @@ public:
 
     static void fullCloseAndOpenLamellas();
 
-    static void shortOpen(float timeSecs);
+    static void shortOpen(float timeSecs = -1);
 
-    static void shortClose(float timeSecs);
+    static void shortClose(float timeSecs = -1);
 
     static void stop();
 

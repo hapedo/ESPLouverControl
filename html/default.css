@@ -50,7 +50,7 @@ form#gpioConfig select, form#gpioConfig input {
     margin-bottom: 5px;
     border: 1px solid #000;
 }
-form#networkConfig input, form#networkConfig select, form#timeConfig input, form#moduleConfig input {
+form#networkConfig input, form#networkConfig select, form#timeConfig input, form#moduleConfig input, form#mqttConfig input {
     width: 200px;
     height: 25px;
     background-color: #eeeeee;
@@ -64,7 +64,7 @@ form#gpioConfig label {
     display:inline-block;
     margin-bottom: 5px;
 }
-form#networkConfig label, form#timeConfig label, form#moduleConfig label {
+form#networkConfig label, form#timeConfig label, form#moduleConfig label, form#mqttConfig label {
     font-size: 0.9rem;
     width: 240px;
     text-align: left;

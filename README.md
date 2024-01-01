@@ -28,9 +28,22 @@ There is also web interface to control louver and configure firmware.
 ## What is implemented
  - AP and client mode
  - Web interface
+ - MQTT
  - Captive server
  - OTA firmware update
- - mDNS for friendly access (xxx.local instead of IP) 
+ - mDNS for friendly access (xxx.local instead of IP)
+ 
+## MQTT
+Following topics are implemented:
+ - CLIENT_ID/movement
+ 
+### CLIENT_ID/movement
+String values:
+ - up - short open movement
+ - down - short close movement
+ - open - full open movement
+ - close - full close movement
+ - close_open_lamellas - full close and open lamellas movement
   
 ## Dependencies
  - ESPAsyncWebSrv
@@ -44,6 +57,7 @@ There is also web interface to control louver and configure firmware.
  - StreamUtils
  - ESPmDNS
  - ESPDateTime
+ - PubSubClient
 
 ## How to build
 This project can be build using Arduino IDE with installed dependencies (listed above).
@@ -53,5 +67,5 @@ This project is under heavy development and it's still not finished.
 
 To do:
  - Export / import configuration
- - MQTT support
+
 

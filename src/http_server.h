@@ -74,6 +74,8 @@ private:
 
     static String networkConfigProcessor(const String& var);
 
+    static String mqttConfigProcessor(const String& var);
+
     WifiConfig m_wifiConfig;
     WifiClientBehavior m_wifiClientBehavior;
     bool m_wifiClientModeSwap;

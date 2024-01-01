@@ -5,6 +5,7 @@
 #include "module.h"
 #include "mdns.h"
 #include "config.h"
+#include "mqtt.h"
 
 void setup() {
     // put your setup code here, to run once:
@@ -15,6 +16,7 @@ void setup() {
     HttpServer::init();
     Mdns::loadConfig();
     Mdns::init();
+    Mqtt::loadConfig();
 }
 
 void loop() 
@@ -23,4 +25,5 @@ void loop()
     Louver::process();
     HttpServer::process();
     Mdns::process();
+    Mqtt::process();
 }

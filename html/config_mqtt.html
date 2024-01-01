@@ -1,0 +1,30 @@
+<!DOCTYPE HTML><html>
+<head>
+  <title>Louver control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="default.css">
+</head>
+<body>
+    <h2>Louver control config</h2>
+    %MODULE_NAME%
+    <h3>MQTT config</h3>
+    <div class="rect">
+        <form action="/mqttConfigSave" method="post" id="mqttConfig">
+            <label for="clientId">Logical name:</label>
+            <input type="text" name="clientId" id="clientId" value="%MQTT_CLIENT_ID%">
+            <br />
+            <label for="brokerIp">Broker IP:</label>
+            <input type="text" name="brokerIp" id="brokerIp" value="%MQTT_BROKER_IP%">
+            <br />
+            <label for="brokerPort">Broker port:</label>
+            <input type="text" name="brokerPort" id="brokerPort" value="%MQTT_BROKER_PORT%">
+            <br />
+            <button class="button" type="submit" form="mqttConfig" value="Submit">Save</button>                                       
+        </form>
+    </div>
+    <form action="/settings" id="back">
+        <button class="button" type="submit" form="back" value="Submit">Back to settings</button>                                       
+    </form>
+    <div id="footer">%VERSION%</div>
+</body>
+</html>

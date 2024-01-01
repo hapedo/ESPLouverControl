@@ -13,6 +13,7 @@
 #include "config.h"
 #include "mdns.h"
 #include "module.h"
+#include "mqtt.h"
 
 class CaptiveRequestHandler : public AsyncWebHandler
 {
@@ -321,6 +322,33 @@ void HttpServer::initPrivate()
         Log::info("HTTP", "Network config changed - requesting reboot");    
         request->send_P(200, "text/html", getHttpNetworkConfigSaved(), defaultProcessor);
     });
+    m_server.on("/mqttConfig", HTTP_GET, [](AsyncWebServerRequest *request){
+        request->send_P(200, "text/html", getHttpMqttConfig(), mqttConfigProcessor);
+        Log::debug("HTTP", "GET request, /mqttConfig");
+    });
+    m_server.on("/mqttConfigSave", HTTP_POST, [](AsyncWebServerRequest *request){
+        Log::debug("HTTP", "POST request, /mqttConfigSave");
+        String value;
+        String brokerIp = Mqtt::getBrokerIp();
+        uint16_t brokerPort = Mqtt::getBrokerPort();
+        String clientId = Mqtt::getClientId();
+        if (request->hasParam("clientId", true)) 
+        {
+            clientId = request->getParam("clientId", true)->value();
+        }
+        if (request->hasParam("brokerIp", true)) 
+        {
+            brokerIp = request->getParam("brokerIp", true)->value();
+        }
+        if (request->hasParam("brokerPort", true)) 
+        {
+            brokerPort = request->getParam("brokerPort", true)->value().toInt();
+        }
+        Mqtt::setBrokerIp(brokerIp.c_str());
+        Mqtt::setBrokerPort(brokerPort);
+        Mqtt::setClientId(clientId.c_str());
+        request->send_P(200, "text/html", getHttpConfigSaved(), defaultProcessor);
+    });
     m_server.on("/portal", HTTP_GET, [](AsyncWebServerRequest *request){
         request->send_P(200, "text/html", getHttpIndex(), defaultProcessor);
         Log::debug("HTTP", "GET request, /portal");
@@ -496,6 +524,17 @@ String HttpServer::networkConfigProcessor(const String& var)
         return "selected";
     if ((var == "SELECTED_CLIENT_BEHAVIOR_1") && (getInstance().m_wifiClientBehavior == WIFI_CLIENT_BEH_STILL_CLIENT))
         return "selected";
+    return defaultProcessor(var);
+}
+
+String HttpServer::mqttConfigProcessor(const String& var)
+{
+    if (var == "MQTT_CLIENT_ID")
+        return Mqtt::getClientId();
+    if (var == "MQTT_BROKER_IP")
+        return Mqtt::getBrokerIp();
+    if (var == "MQTT_BROKER_PORT")
+        return String(Mqtt::getBrokerPort());
     return defaultProcessor(var);
 }
 

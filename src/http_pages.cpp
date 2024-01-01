@@ -54,7 +54,7 @@ form#gpioConfig select, form#gpioConfig input {
     margin-bottom: 5px;
     border: 1px solid #000;
 }
-form#networkConfig input, form#networkConfig select, form#timeConfig input, form#moduleConfig input {
+form#networkConfig input, form#networkConfig select, form#timeConfig input, form#moduleConfig input, form#mqttConfig input {
     width: 200px;
     height: 25px;
     background-color: #eeeeee;
@@ -68,7 +68,7 @@ form#gpioConfig label {
     display:inline-block;
     margin-bottom: 5px;
 }
-form#networkConfig label, form#timeConfig label, form#moduleConfig label {
+form#networkConfig label, form#timeConfig label, form#moduleConfig label, form#mqttConfig label {
     font-size: 0.9rem;
     width: 240px;
     text-align: left;
@@ -288,6 +288,39 @@ const char* httpNetworkConfig PROGMEM = R"rawliteral(
 </html>
 )rawliteral";  
 
+const char* httpMqttConfig PROGMEM = R"rawliteral(
+<!DOCTYPE HTML><html>
+<head>
+  <title>Louver control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="default.css">
+</head>
+<body>
+    <h2>Louver control config</h2>
+    %MODULE_NAME%
+    <h3>MQTT config</h3>
+    <div class="rect">
+        <form action="/mqttConfigSave" method="post" id="mqttConfig">
+            <label for="clientId">Logical name:</label>
+            <input type="text" name="clientId" id="clientId" value="%MQTT_CLIENT_ID%">
+            <br />
+            <label for="brokerIp">Broker IP:</label>
+            <input type="text" name="brokerIp" id="brokerIp" value="%MQTT_BROKER_IP%">
+            <br />
+            <label for="brokerPort">Broker port:</label>
+            <input type="text" name="brokerPort" id="brokerPort" value="%MQTT_BROKER_PORT%">
+            <br />
+            <button class="button" type="submit" form="mqttConfig" value="Submit">Save</button>                                       
+        </form>
+    </div>
+    <form action="/settings" id="back">
+        <button class="button" type="submit" form="back" value="Submit">Back to settings</button>                                       
+    </form>
+    <div id="footer">%VERSION%</div>
+</body>
+</html>
+)rawliteral";
+
 const char* httpSettings PROGMEM = R"rawliteral(
 <!DOCTYPE HTML><html>
 <head>
@@ -311,6 +344,9 @@ const char* httpSettings PROGMEM = R"rawliteral(
         </form>    
         <form action="/networkConfig" id="networkConfig">
             <button class="button" type="submit" form="networkConfig" value="Submit">Network config</button>                                       
+        </form>    
+        <form action="/mqttConfig" id="mqttConfig">
+            <button class="button" type="submit" form="mqttConfig" value="Submit">MQTT config</button>                                       
         </form>    
         <form action="/update" id="firmwareUpdate">
             <button class="button" type="submit" form="firmwareUpdate" value="Submit">Firmware update (OTA)</button>                                       
@@ -392,6 +428,11 @@ const char* getHttpTimingConfig()
 const char* getHttpNetworkConfig()
 {
     return httpNetworkConfig;
+}
+
+const char* getHttpMqttConfig()
+{
+    return httpMqttConfig;
 }
 
 const char* getHttpSettings()

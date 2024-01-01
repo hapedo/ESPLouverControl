@@ -12,6 +12,8 @@ const char* getHttpTimingConfig();
 
 const char* getHttpNetworkConfig();
 
+const char* getHttpMqttConfig();
+
 const char* getHttpSettings();
 
 const char* getHttpNetworkConfigSaved();

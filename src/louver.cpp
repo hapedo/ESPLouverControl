@@ -172,6 +172,8 @@ void Louver::shortOpen(float timeSecs)
 {
     Louver& inst = getInstance();
     MovementStep step;
+    if (timeSecs == -1)
+        timeSecs = (float)inst.m_timeShortMovement / 1000;
     step.direction = DIR_UP;
     step.timeMilli = Time::nowRelativeMilli() + (uint32_t)(timeSecs * 1000);
     inst.m_movement.clear();
@@ -184,6 +186,8 @@ void Louver::shortClose(float timeSecs)
 {
     Louver& inst = getInstance();
     MovementStep step;
+    if (timeSecs == -1)
+        timeSecs = (float)inst.m_timeShortMovement / 1000;
     step.direction = DIR_DOWN;
     step.timeMilli = Time::nowRelativeMilli() + (uint32_t)(timeSecs * 1000);
     inst.m_movement.clear();

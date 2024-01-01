@@ -12,6 +12,7 @@
 #include "time.h"
 #include "config.h"
 #include "mdns.h"
+#include "module.h"
 
 class CaptiveRequestHandler : public AsyncWebHandler
 {
@@ -123,7 +124,7 @@ void HttpServer::initPrivate()
         m_dnsServer.start(53, "*", WiFi.softAPIP());
     }
     m_server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-        request->send(200, "text/html", getHttpIndex());
+        request->send_P(200, "text/html", getHttpIndex(), defaultProcessor);
         Log::debug("HTTP", "GET request, /");
     });
     m_server.on("/default.css", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -131,8 +132,23 @@ void HttpServer::initPrivate()
         Log::debug("HTTP", "GET request, /default.css");
     });
     m_server.on("/settings", HTTP_GET, [](AsyncWebServerRequest *request){
-        request->send(200, "text/html", getHttpSettings());
+        request->send_P(200, "text/html", getHttpSettings(), defaultProcessor);
         Log::debug("HTTP", "GET request, /settings");
+    });
+    m_server.on("/moduleConfig", HTTP_GET, [](AsyncWebServerRequest *request){
+        request->send_P(200, "text/html", getHttpModuleConfig(), moduleConfigProcessor);
+        Log::debug("HTTP", "GET request, /moduleConfig");
+    });
+    m_server.on("/moduleConfigSave", HTTP_POST, [](AsyncWebServerRequest *request){
+        Log::debug("HTTP", "POST request, /moduleConfigSave");
+        String value;
+        String name = Module::getName();
+        if (request->hasParam("name", true))
+        {
+            name = request->getParam("name", true)->value();
+        }
+        Module::setName(name.c_str());
+        request->send_P(200, "text/html", getHttpConfigSaved(), defaultProcessor);
     });
     m_server.on("/gpioConfig", HTTP_GET, [](AsyncWebServerRequest *request){
         request->send_P(200, "text/html", getHttpGpioConfig(), gpioConfigProcessor);
@@ -197,7 +213,7 @@ void HttpServer::initPrivate()
         }
         Louver::configureGpio(Louver::DIR_UP, pinKeyUp, relayUp, highKeyUp, highRelayUp);
         Louver::configureGpio(Louver::DIR_DOWN, pinKeyDown, relayDown, highKeyDown, highRelayDown);
-        request->send(200, "text/html", getHttpConfigSaved());
+        request->send_P(200, "text/html", getHttpConfigSaved(), defaultProcessor);
     });
     m_server.on("/timingConfig", HTTP_GET, [](AsyncWebServerRequest *request){
         request->send_P(200, "text/html", getHttpTimingConfig(), timingConfigProcessor);
@@ -228,7 +244,7 @@ void HttpServer::initPrivate()
             timeOpenLamellasSecs = request->getParam("timeOpenLamellas", true)->value().toFloat();
         }
         Louver::configureTimes(timeFullOpenSecs, timeFullCloseSecs, timeOpenLamellasSecs, shortMovementSecs);
-        request->send(200, "text/html", getHttpConfigSaved());
+        request->send_P(200, "text/html", getHttpConfigSaved(), defaultProcessor);
     });
     m_server.on("/networkConfig", HTTP_GET, [](AsyncWebServerRequest *request){
         request->send_P(200, "text/html", getHttpNetworkConfig(), networkConfigProcessor);
@@ -281,10 +297,10 @@ void HttpServer::initPrivate()
         setWifiConfig(wifiConfig);
         Mdns::configure(mdnsHost);
         Log::info("HTTP", "Network config changed - requesting reboot");    
-        request->send(200, "text/html", getHttpNetworkConfigSaved());
+        request->send_P(200, "text/html", getHttpNetworkConfigSaved(), defaultProcessor);
     });
     m_server.on("/portal", HTTP_GET, [](AsyncWebServerRequest *request){
-        request->send(200, "text/html", getHttpIndex());
+        request->send_P(200, "text/html", getHttpIndex(), defaultProcessor);
         Log::debug("HTTP", "GET request, /portal");
     });
     // Send a GET request to <ESP_IP>/update?state=<inputMessage>
@@ -349,21 +365,27 @@ void HttpServer::loadConfigPrivate()
     m_wifiConfig = (WifiConfig)Config::getInt("network/wifi_mode", WIFI_CONF_CLIENT);
     m_wifiClientBehavior = (WifiClientBehavior)Config::getInt("network/wifi_client_behavior", WIFI_CLIENT_BEH_1MCLIENT_5MAP);
     m_wifiClientModeSwap = Config::getBool("network/wifi_client_mode_swap", false);
-
-#ifdef ESP32
-    uint32_t chipId = 0;
-	for(int i=0; i<17; i=i+8) 
-    {
-	  chipId |= ((ESP.getEfuseMac() >> (40 - i)) & 0xff) << i;
-	}
-    m_wifiSsidAp = Config::getString("network/ssid_ap", String(DEFAULT_SSID_AP) + "_" + String(chipId));
-#else
-    m_wifiSsidAp = Config::getString("network/ssid_ap", String(DEFAULT_SSID_AP) + "_" + ESP.getChipId());
-#endif
+    m_wifiSsidAp = Config::getString("network/ssid_ap", String(DEFAULT_SSID_AP) + "_" + String(Module::getChipId()));
     m_wifiPasswordAp = Config::getString("network/password_ap", DEFAULT_PASSWORD_AP);
     m_wifiSsid = Config::getString("network/ssid", DEFAULT_SSID);
     m_wifiPassword = Config::getString("network/password", DEFAULT_PASSWORD);
     Log::info("HTTP", "Configuration loaded");
+}
+
+String HttpServer::defaultProcessor(const String& var)
+{
+    if (var == "MODULE_NAME")
+        return Module::getName();
+    else if (var == "VERSION")
+        return String(Config::VERSION);
+    return String();
+}
+
+String HttpServer::moduleConfigProcessor(const String& var)
+{
+    if (var == "MODULE_NAME")
+        return Module::getName();
+    return defaultProcessor(var);
 }
 
 String HttpServer::gpioConfigProcessor(const String& var)
@@ -402,7 +424,7 @@ String HttpServer::gpioConfigProcessor(const String& var)
         return "selected";
     if ((var == "SELECTED_RDOWN_INVERTED_NO") && (highRelayDown))
         return "selected";
-    return String();
+    return defaultProcessor(var);
 }
 
 String HttpServer::timingConfigProcessor(const String& var)
@@ -420,7 +442,7 @@ String HttpServer::timingConfigProcessor(const String& var)
         return String(timeOpenLamellasSecs);
     if (var == "TIME_SHORT")
         return String(shortMovementSecs);
-    return String();
+    return defaultProcessor(var);
 }
 
 String HttpServer::networkConfigProcessor(const String& var)
@@ -439,7 +461,7 @@ String HttpServer::networkConfigProcessor(const String& var)
         return getInstance().m_wifiPassword;
     if (var == "NETWORK_MDNS_HOST")
         return Mdns::getHost();
-    return String();
+    return defaultProcessor(var);
 }
 
 void HttpServer::process()

@@ -64,6 +64,10 @@ private:
     
     void loadConfigPrivate();
 
+    static String defaultProcessor(const String& var);
+
+    static String moduleConfigProcessor(const String& var);
+
     static String gpioConfigProcessor(const String& var);
 
     static String timingConfigProcessor(const String& var);

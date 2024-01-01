@@ -31,6 +31,10 @@ div.rect {
     margin: 10px;
     padding: 5px;
 }
+div#footer {
+    text-align: right;
+    font-size: 0.7rem;
+}
 a {
     color: #8888;
     text-decoration:none;
@@ -39,14 +43,14 @@ a:hover {
     color: #000;
     text-decoration:none;
 }
-form#gpioConfig select, form#gpioConfig input, form#networkConfig input, form#networkConfig select, form#timeConfig input {
+form#gpioConfig select, form#gpioConfig input, form#networkConfig input, form#networkConfig select, form#timeConfig input, form#moduleConfig input {
     width: 100px;
     height: 25px;
     background-color: #eeeeee;
     margin-bottom: 5px;
     border: 1px solid #000;
 }
-form#gpioConfig label, form#networkConfig label, form#timeConfig label {
+form#gpioConfig label, form#networkConfig label, form#timeConfig label, form#moduleConfig label {
     font-size: 0.9rem;
     width: 140px;
     text-align: left;

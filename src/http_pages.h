@@ -4,6 +4,8 @@ const char* getHttpDefaultCss();
 
 const char* getHttpIndex();
 
+const char* getHttpModuleConfig();
+
 const char* getHttpGpioConfig();
 
 const char* getHttpTimingConfig();

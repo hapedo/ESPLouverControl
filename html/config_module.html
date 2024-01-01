@@ -6,8 +6,16 @@
 </head>
 <body>
     <h2>Louver control config</h2>
-    %MODULE_NAME%<br /><br />
-    <strong>Config saved.</strong>
+    %MODULE_NAME%
+    <h3>Module config</h3>
+    <div class="rect">
+        <form action="/moduleConfigSave" method="post" id="moduleConfig">
+            <label for="name">Module name:</label>
+            <input type="text" name="name" id="name" value="%MODULE_NAME%">
+            <br />
+            <button class="button" type="submit" form="moduleConfig" value="Submit">Save</button>                                       
+        </form>
+    </div>
     <form action="/settings" id="back">
         <button class="button" type="submit" form="back" value="Submit">Back to settings</button>                                       
     </form>

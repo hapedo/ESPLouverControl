@@ -35,6 +35,10 @@ div.rect {
     margin: 10px;
     padding: 5px;
 }
+div#footer {
+    text-align: right;
+    font-size: 0.7rem;
+}
 a {
     color: #8888;
     text-decoration:none;
@@ -43,14 +47,14 @@ a:hover {
     color: #000;
     text-decoration:none;
 }
-form#gpioConfig select, form#gpioConfig input, form#networkConfig input, form#networkConfig select, form#timeConfig input {
+form#gpioConfig select, form#gpioConfig input, form#networkConfig input, form#networkConfig select, form#timeConfig input, form#moduleConfig input {
     width: 100px;
     height: 25px;
     background-color: #eeeeee;
     margin-bottom: 5px;
     border: 1px solid #000;
 }
-form#gpioConfig label, form#networkConfig label, form#timeConfig label {
+form#gpioConfig label, form#networkConfig label, form#timeConfig label, form#moduleConfig label {
     font-size: 0.9rem;
     width: 140px;
     text-align: left;
@@ -71,6 +75,7 @@ const char* httpIndex PROGMEM = R"rawliteral(
         <a href="/settings">&#x03C0</a>
     </div>
     <h2>Louver control</h2>
+    %MODULE_NAME%
     <div class="rect">
     <button class="button" id="shortUp" onclick="buttonPressed(this)">&#9650;</button>
     <button class="button" id="shortDown" onclick="buttonPressed(this)">&#9660;</button>
@@ -82,6 +87,7 @@ const char* httpIndex PROGMEM = R"rawliteral(
     <br />
     <button class="button" id="stop" onclick="buttonPressed(this)">Stop</button>
     </div>
+    <div id="footer">%VERSION%</div>
     
 <script>
 function buttonPressed(element) {
@@ -90,6 +96,33 @@ function buttonPressed(element) {
   xhr.send();
 }
 </script>
+</body>
+</html>
+)rawliteral";
+
+const char* httpModuleConfig PROGMEM = R"rawliteral(
+<!DOCTYPE HTML><html>
+<head>
+  <title>Louver control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="default.css">
+</head>
+<body>
+    <h2>Louver control config</h2>
+    %MODULE_NAME%
+    <h3>Module config</h3>
+    <div class="rect">
+        <form action="/moduleConfigSave" method="post" id="moduleConfig">
+            <label for="name">Module name:</label>
+            <input type="text" name="name" id="name" value="%MODULE_NAME%">
+            <br />
+            <button class="button" type="submit" form="moduleConfig" value="Submit">Save</button>                                       
+        </form>
+    </div>
+    <form action="/settings" id="back">
+        <button class="button" type="submit" form="back" value="Submit">Back to settings</button>                                       
+    </form>
+    <div id="footer">%VERSION%</div>
 </body>
 </html>
 )rawliteral";
@@ -103,6 +136,7 @@ const char* httpGpioConfig PROGMEM = R"rawliteral(
 </head>
 <body>
     <h2>Louver control config</h2>
+    %MODULE_NAME%
     <h3>GPIO config</h3>
     <div class="rect">
         <form action="/gpioConfigSave" method="post" id="gpioConfig">
@@ -140,6 +174,7 @@ const char* httpGpioConfig PROGMEM = R"rawliteral(
     <form action="/settings" id="back">
         <button class="button" type="submit" form="back" value="Submit">Back to settings</button>                                       
     </form>
+    <div id="footer">%VERSION%</div>
  </body>
 </html>
 )rawliteral";
@@ -153,20 +188,21 @@ const char* httpTimingConfig PROGMEM = R"rawliteral(
 </head>
 <body>
     <h2>Louver control config</h2>
+    %MODULE_NAME%
     <h3>Timing config</h3>
     <div class="rect">
         <form action="/timingConfigSave" method="post" id="timeConfig">
             <label for="timeFullOpen">Full open [s]:</label>
-            <input type="text" value="%TIME_FULL_OPEN%">
+            <input type="text" name="timeFullOpen" id="timeFullOpen" value="%TIME_FULL_OPEN%">
             <br />
             <label for="timeFullClose">Full close [s]:</label>
-            <input type="text" value="%TIME_FULL_CLOSE%">
+            <input type="text" name="timeFullClose" id="timeFullClose" value="%TIME_FULL_CLOSE%">
             <br />
             <label for="timeShort">Short movement [s]:</label>
-            <input type="text" value="%TIME_SHORT%">
+            <input type="text" name="timeShort" id="timeShort" value="%TIME_SHORT%">
             <br />
             <label for="timeOpenLamellas">Open lamellas [s]:</label>
-            <input type="text" value="%TIME_OPEN_LAMELLAS%">
+            <input type="text" name="timeOpenLamellas" id="timeOpenLamellas" value="%TIME_OPEN_LAMELLAS%">
             <br />
             <button class="button" type="submit" form="timeConfig" value="Submit">Save</button>                                       
         </form>
@@ -174,6 +210,7 @@ const char* httpTimingConfig PROGMEM = R"rawliteral(
     <form action="/settings" id="back">
         <button class="button" type="submit" form="back" value="Submit">Back to settings</button>                                       
     </form>
+    <div id="footer">%VERSION%</div>
 </body>
 </html>
 )rawliteral";
@@ -187,6 +224,7 @@ const char* httpNetworkConfig PROGMEM = R"rawliteral(
 </head>
 <body>
     <h2>Louver control config</h2>
+    %MODULE_NAME%
     <h3>Network config</h3>
     <div class="rect">
         <form action="/networkConfigSave" method="post" id="networkConfig">
@@ -218,6 +256,7 @@ const char* httpNetworkConfig PROGMEM = R"rawliteral(
     <form action="/settings" id="back">
         <button class="button" type="submit" form="back" value="Submit">Back to settings</button>                                       
     </form>
+    <div id="footer">%VERSION%</div>
 </body>
 </html>
 )rawliteral";  
@@ -231,6 +270,7 @@ const char* httpSettings PROGMEM = R"rawliteral(
 </head>
 <body>
     <h2>Louver control config</h2>
+    %MODULE_NAME%
     <h3>Settings</h3>
     <div class="rect">
         <form action="/moduleConfig" id="moduleConfig">
@@ -253,6 +293,7 @@ const char* httpSettings PROGMEM = R"rawliteral(
     <form action="/" id="back">
         <button class="button" type="submit" form="back" value="Submit">Back to main page</button>                                       
     </form>
+    <div id="footer">%VERSION%</div>
 </body>
 </html>
 )rawliteral";  
@@ -266,10 +307,12 @@ const char* httpNetworkConfigSaved PROGMEM = R"rawliteral(
 </head>
 <body>
     <h2>Louver control config</h2>
-    Network config saved - rebooting.
+    %MODULE_NAME%<br /><br />
+    <strong>Network config saved - rebooting.</strong>
     <form action="/settings" id="back">
         <button class="button" type="submit" form="back" value="Submit">Back to settings</button>                                       
     </form>
+    <div id="footer">%VERSION%</div>
 </body>
 </html>
 )rawliteral";  
@@ -283,10 +326,12 @@ const char* httpConfigSaved PROGMEM = R"rawliteral(
 </head>
 <body>
     <h2>Louver control config</h2>
-    Config saved.
+    %MODULE_NAME%<br /><br />
+    <strong>Config saved.</strong>
     <form action="/settings" id="back">
         <button class="button" type="submit" form="back" value="Submit">Back to settings</button>                                       
     </form>
+    <div id="footer">%VERSION%</div>
 </body>
 </html>
 )rawliteral"; 
@@ -300,6 +345,12 @@ const char* getHttpIndex()
 {
     return httpIndex;
 }
+
+const char* getHttpModuleConfig()
+{
+    return httpModuleConfig;
+}
+
 
 const char* getHttpGpioConfig()
 {

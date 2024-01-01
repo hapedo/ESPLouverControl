@@ -50,9 +50,5 @@ This project is under heavy development and it's still not finished.
 
 To do:
  - Export / import configuration
- - Module configuration (friendly name, etc.)
  - MQTT support
  - Enter AP mode by pressing button
-
-
-

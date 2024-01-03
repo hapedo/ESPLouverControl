@@ -29,7 +29,7 @@ There is also web interface to control louver and configure firmware.
  - AP and client mode
  - Web interface
  - MQTT
- - Captive server
+ - Captive portal
  - OTA firmware update
  - mDNS for friendly access (xxx.local instead of IP)
  
@@ -67,5 +67,6 @@ This project is under heavy development and it's still not finished.
 
 To do:
  - Export / import configuration
+ - Power meter implementation (louver movement stop on low consumption condition)
 
 

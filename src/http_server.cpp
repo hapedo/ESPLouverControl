@@ -29,7 +29,7 @@ public:
     void handleRequest(AsyncWebServerRequest *request)
     {
         Log::debug("HTTP", "Captive server request, /");
-        request->send_P(200, "text/html", getHttpIndex());
+        request->send_P(200, "text/html", getHttpIndex(), HttpServer::defaultProcessor);
     }
 };
 
@@ -396,7 +396,8 @@ void HttpServer::initPrivate()
 void HttpServer::initAsAccessPoint()
 {
     //WiFi.mode(WIFI_AP);
-    WiFi.enableAP(true);
+    //WiFi.enableAP(true);
+    WiFi.mode(WIFI_AP);
     delay(100);
     WiFi.softAP(m_wifiSsidAp, m_wifiPasswordAp);
     Log::info("HTTP", "Initializing as AP, IP = %s, SSID = %s", WiFi.softAPIP().toString().c_str(), m_wifiSsidAp.c_str());
@@ -541,6 +542,7 @@ String HttpServer::mqttConfigProcessor(const String& var)
 void HttpServer::process()
 {
     HttpServer& inst = getInstance();
+    inst.m_dnsServer.processNextRequest();
     int status = WiFi.status();
     if (!Module::isRebootRequested())
     {

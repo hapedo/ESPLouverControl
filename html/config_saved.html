@@ -5,12 +5,22 @@
   <link rel="stylesheet" href="default.css">
 </head>
 <body>
-    <h2>Louver control config</h2>
-    %MODULE_NAME%<br /><br />
+  <div class="header">
+    <h1>Louver control config</h1>
+    <p class="module_title-info">%MODULE_NAME%</p>
+ </div>
+ <div class="container">
+  <div class="card">
     <strong>Config saved.</strong>
     <form action="/settings" id="back">
-        <button class="button" type="submit" form="back" value="Submit">Back to settings</button>                                       
-    </form>
-    <div id="footer">%VERSION%</div>
+      <button class="button" type="submit" form="back" value="Submit">Back to settings</button>                                       
+  </form>
+  <p class="card_title-info">
+    <div class="version">
+     v%VERSION%
+    </div>
+  </p>
+  </div>
+ </div>
 </body>
 </html>

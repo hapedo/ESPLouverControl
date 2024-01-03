@@ -5,45 +5,55 @@
   <link rel="stylesheet" href="default.css">
 </head>
 <body>
-    <h2>Louver control config</h2>
-    %MODULE_NAME%
-    <h3>Network config</h3>
-    <div class="rect">
-        <form action="/networkConfigSave" method="post" id="networkConfig">
-            <label for="wifiMode">WIFI mode:</label>
-            <select id="wifiMode" name="wifiMode">
-                <option value="AP" %SELECTED_WIFI_MODE_AP%>AP</option>
-                <option value="client" %SELECTED_WIFI_MODE_CLIENT%>Client</option>
-            </select>
-            <br />
-            <label for="apSSID">AP SSID:</label>
-            <input type="text" name="apSSID" id = "apSSID" value="%NETWORK_SSID_AP%">
-            <br />
-            <label for="apPass">AP password:</label>
-            <input type="password" name="apPass" id="apPass" value="%NETWORK_PASS_AP%">
-            <br />
-            <label for="clientSSID">Client SSID:</label>
-            <input type="text" name="clientSSID" id="clientSSID" value="%NETWORK_SSID%">
-            <br />
-            <label for="clientPass">Client password:</label>
-            <input type="password" name="clientPass" id="clientPass" value="%NETWORK_PASS%">
-            <br />
-            <label for="mDNSHost">mDNS host:</label>
-            <input type="text" name="mDNSHost" id="mDNSHost" value="%NETWORK_MDNS_HOST%">
-            <br />
-            <label for="clientBehavior">Client behavior when cannot connect:</label>
-            <select id="clientBehavior" name="clientBehavior">
-                <option value="0" %SELECTED_CLIENT_BEHAVIOR_0%>1m in client, 5mins in AP</option>
-                <option value="1" %SELECTED_CLIENT_BEHAVIOR_1%>Permanent client</option>
-            </select>
-            <br />
-            <button class="button" type="submit" form="networkConfig" value="Submit">Save</button>                                       
-        </form>
+    <div class="header">
+        <h1>Louver control config</h1>
+        <p class="module_title-info">%MODULE_NAME%</p>
     </div>
-    <br />
-    <form action="/settings" id="back">
-        <button class="button" type="submit" form="back" value="Submit">Back to settings</button>                                       
-    </form>
-    <div id="footer">%VERSION%</div>
+    <div class="container">
+        <div class="card">
+            <p class="card_title-info">MQTT Configuration</p>
+            <form class="card_form" action="/networkConfigSave" method="post" id="networkConfig">
+                <div class="input">
+                    <select class="select_field" id="wifiMode" name="wifiMode">
+                        <option value="ap" %SELECTED_WIFI_MODE_AP%>AP</option>
+                        <option value="client" %SELECTED_WIFI_MODE_CLIENT%>Client</option>
+                    </select>
+                    <label class="input_select_label" for="wifiMode">WIFI mode</label>
+                </div>
+                <div class="input">
+                    <input type="text" class="input_field" required name="apSSID" id = "apSSID" value="%NETWORK_SSID_AP%"/>
+                    <label class="input_label" for="apSSID">AP SSID:</label>
+                </div>
+                <div class="input">
+                    <input type="password" class="input_field" name="apPass" id = "apPass" value="%NETWORK_PASS_AP%"/>
+                    <label class="input_label" for="apPass">AP password</label>
+                </div>
+                <div class="input">
+                    <input type="text" class="input_field" required name="clientSSID" id = "clientSSID" value="%NETWORK_SSID%"/>
+                    <label class="input_label" for="clientSSID">Client SSID:</label>
+                </div>
+                <div class="input">
+                    <input type="password" class="input_field" name="clientPass" id = "clientPass" value="%NETWORK_PASS%"/>
+                    <label class="input_label" for="clientPass">Client password</label>
+                </div>
+                <div class="input">
+                    <select class="select_field" id="clientBehavior" name="clientBehavior">
+                        <option value="0" %SELECTED_CLIENT_BEHAVIOR_0%>1m in client, 5mins in AP</option>
+                        <option value="1" %SELECTED_CLIENT_BEHAVIOR_1%>Permanent client</option>
+                    </select>
+                    <label class="input_select_label" for="clientBehavior">Client behavior when cannot connect</label>
+                </div>
+                <button class="button" type="submit" form="networkConfig" value="Submit">Save</button>
+            </form>
+            <form action="/settings" id="back">
+                <button class="button" type="submit" form="back" value="Submit">Back to settings</button>                                       
+            </form>
+            <p class="card_title-info">
+                <div class="version">
+                 v%VERSION%
+                </div>
+            </p>
+        </div>
+    </div>
 </body>
 </html>

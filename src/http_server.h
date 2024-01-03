@@ -44,6 +44,8 @@ public:
 
     static void process();
 
+    static String defaultProcessor(const String& var);
+
 private:
 
     static constexpr uint32_t RECONNECT_PERIOD_SECS = 20;
@@ -63,8 +65,6 @@ private:
     void initAsClient();
     
     void loadConfigPrivate();
-
-    static String defaultProcessor(const String& var);
 
     static String moduleConfigProcessor(const String& var);
 

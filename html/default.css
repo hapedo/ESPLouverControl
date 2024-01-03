@@ -1,73 +1,211 @@
-html {font-family: Arial; display: inline-block; text-align: center;}
-h2 {font-size: 2.0rem;}
-h3 {font-size: 1.0rem; text-align: left;}
-p {font-size: 3.0rem;}
-body {max-width: 600px; margin:0px auto; padding-bottom: 25px; background-color: #eeeeee;}
-input:checked+.slider {background-color: #2196F3}
-input:checked+.slider:before {-webkit-transform: translateX(52px); -ms-transform: translateX(52px); transform: translateX(52px)}
-.button {
-    background-color: #04AA6D; /* Green */
-    border: none;
-    border-radius: 4px;
-    color: white;
-    padding: 15px 32px;
+@import url(https://fonts.googleapis.com/css?family=Oswald|Roboto);
+html {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Roboto, sans-serif;
+  color: #515a6e;
+  background-color: #d5eafc;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+  overflow:visible;
+}
+
+a {
+  cursor: pointer;
+  color: #eee;
+  text-decoration: none;
+  -moz-transition: all 0.3s;
+  -o-transition: all 0.3s;
+  -webkit-transition: all 0.3s;
+  transition: all 0.3s;
+}
+a:hover {
+  color: #ff5050;
+}
+
+.header {
+    height: 100px;
+    width: 100%;
+    float: left;
+    position: absolute;
+    top: 0;
     text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    transition-duration: 0.4s;
-    margin: 10px;
+    background-color: #000000;
 }
-.button:hover {
-background-color: #1ed492; /* Green */
-color: white;
+
+h1 {
+    color: #ffffff;
 }
+
+.container {
+  text-align: center;
+  position: relative;
+  background-color: #fafafe;
+  border-radius: 10px;
+  margin: 140px 0 0 0;
+  padding: 25px 20px 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  width: 500px;
+  box-sizing: border-box;
+}
+
+.container_control {
+    text-align: center;
+    position: relative;
+    background-color: #fafafe;
+    border-radius: 10px;
+    margin: 140px 0 0 0;
+    padding: 25px 20px 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    width: 320px;
+    box-sizing: border-box;
+  }
+
+.container:before, .container_control::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  height: 60%;
+  background-color: #fafafe;
+  border-radius: 10px;
+  z-index: 2;
+}
+
+.card {
+  position: relative;
+  z-index: 2;
+}
+
+.card_title {
+  font-size: 24px;
+  margin: 0;
+}
+
+.card_title-info {
+  font-size: 14px;
+  margin: 7px 0 10px;
+  font-weight: bold;
+}
+
+.module_title-info {
+    font-size: 14px;
+    margin: 7px 0 10px;
+    color: #fff;
+}
+
 div.config {
     text-align: right;
 }
-div.rect {
-    border: 1px solid #888888;
-    background-color: #dddddd;
-    margin: 10px;
-    padding: 5px;
-}
-div#footer {
+
+div.version {
     text-align: right;
-    font-size: 0.7rem;
+    font-size: 10px;
 }
-a {
-    color: #8888;
-    text-decoration:none;
+
+button {
+  border-radius: 4px;
+  border: none;
+  outline: none;
+  padding: 0 15px;
+  font-size: 18px;
+  line-height: 36px;
+  font-weight: 500;
+  margin: 10px 10px 10px;
+  color: #fff;
+  background: linear-gradient(#ff6100, #ff5050);
+  box-shadow: 0 2px 12px -3px #ff5050;
+  -moz-animation: btn 6s 3s infinite ease-in-out;
+  -webkit-animation: btn 6s 3s infinite ease-in-out;
+  animation: btn 6s 3s infinite ease-in-out;
+  opacity: 0.9;
+  -moz-transition: all 0.3s;
+  -o-transition: all 0.3s;
+  -webkit-transition: all 0.3s;
+  transition: all 0.3s;
 }
-a:hover {
-    color: #000;
-    text-decoration:none;
-}
-form#gpioConfig select, form#gpioConfig input {
+button.movement {
     width: 100px;
-    height: 25px;
-    background-color: #eeeeee;
-    margin-bottom: 5px;
-    border: 1px solid #000;
+    height: 50px;
 }
-form#networkConfig input, form#networkConfig select, form#timeConfig input, form#moduleConfig input, form#mqttConfig input {
-    width: 200px;
-    height: 25px;
-    background-color: #eeeeee;
-    margin-bottom: 5px;
-    border: 1px solid #000;
+button:hover {
+  opacity: 1;
+  box-shadow: 0 2px 2px -3px #ff5050;
 }
-form#gpioConfig label {
-    font-size: 0.9rem;
-    width: 140px;
-    text-align: left;
-    display:inline-block;
-    margin-bottom: 5px;
+
+.card_info {
+  font-size: 14px;
 }
-form#networkConfig label, form#timeConfig label, form#moduleConfig label, form#mqttConfig label {
-    font-size: 0.9rem;
-    width: 240px;
-    text-align: left;
-    display:inline-block;
-    margin-bottom: 5px;
+
+.input {
+  display: flex;
+  flex-direction: column-reverse;
+  position: relative;
+  padding-top: 10px;
+}
+
+.input + .input {
+  margin-top: 25px;
+}
+
+.input_label {
+  color: #8597a3;
+  position: absolute;
+  top: 20px;
+  -moz-transition: all 0.3s;
+  -o-transition: all 0.3s;
+  -webkit-transition: all 0.3s;
+  transition: all 0.3s;
+}
+
+.input_select_label {
+    color: #8597a3;
+    position: absolute;
+    top: -10px;
+  }
+
+.input_field, .select_field {
+  border: 0;
+  padding: 0;
+  z-index: 1;
+  background-color: transparent;
+  border-bottom: 2px solid #eee;
+  font: inherit;
+  font-size: 14px;
+  line-height: 30px;
+}
+.input_field:focus, .input_field:valid {
+  outline: 0;
+  border-bottom-color: #665856;
+}
+.input_field:focus + .input_label, .input_field:valid + .input_label,  .select_field:focus + .select_label, .select_field:valid + .select_label{
+  color: #665856;
+  -moz-transform: translateY(-25px);
+  -ms-transform: translateY(-25px);
+  -webkit-transform: translateY(-25px);
+  transform: translateY(-25px);
+}
+
+.link {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  z-index: 3;
 }

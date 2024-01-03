@@ -5,52 +5,80 @@
   <link rel="stylesheet" href="default.css">
 </head>
 <body>
-    <h2>Louver control config</h2>
-    %MODULE_NAME%
-    <h3>GPIO config</h3>
-    <div class="rect">
-        <form action="/gpioConfigSave" method="post" id="gpioConfig">
-            <label for="downGpio">Key down GPIO:</label>
-            <input type="text" name="downGpio" id = "downGpio" value="%KEY_DOWN_GPIO%">
-            <select id="downInvert" name="downInvert">
-                <option value="0" %SELECTED_DOWN_INVERTED_NO%>Active high</option>
-                <option value="1" %SELECTED_DOWN_INVERTED_YES%>Active low</option>
-            </select>
-            <br />
-            <label for="upGpio">Key up GPIO:</label>
-            <input type="text" name="upGpio" id = "upGpio" value="%KEY_UP_GPIO%">
-            <select id="upInvert" name="upInvert">
-                <option value="0" %SELECTED_UP_INVERTED_NO%>Active high</option>
-                <option value="1" %SELECTED_UP_INVERTED_YES%>Active low</option>
-            </select>
-            <br />
-            <label for="rdownGpio">Relay down GPIO:</label>
-            <input type="text" name="rdownGpio" id = "rdownGpio" value="%RELAY_DOWN_GPIO%">
-            <select id="rdownInvert" name="rdownInvert">
-                <option value="0" %SELECTED_RDOWN_INVERTED_NO%>Active high</option>
-                <option value="1" %SELECTED_RDOWN_INVERTED_YES%>Active low</option>
-            </select>
-            <br />            
-            <label for="rupGpio">Relay up GPIO:</label>
-            <input type="text" name="rupGpio" id = "rupGpio" value="%RELAY_UP_GPIO%">
-            <select id="rupInvert" name="rupInvert">
-                <option value="0" %SELECTED_RUP_INVERTED_NO%>Active high</option>
-                <option value="1" %SELECTED_RUP_INVERTED_YES%>Active low</option>
-            </select>
-            <br />
-            <label for="resetGpio">Reset key GPIO:</label>
-            <input type="text" name="resetGpio" id = "resetGpio" value="%KEY_RESET_GPIO%">
-            <select id="resetInvert" name="resetInvert">
-                <option value="0" %SELECTED_KEY_RESET_INVERTED_NO%>Active high</option>
-                <option value="1" %SELECTED_KEY_RESET_INVERTED_YES%>Active low</option>
-            </select>
-            <br />
-            <button class="button" type="submit" form="gpioConfig" value="Submit">Save</button>                                       
-        </form>
+    <div class="header">
+        <h1>Louver control config</h1>
+        <p class="module_title-info">%MODULE_NAME%</p>
     </div>
-    <form action="/settings" id="back">
-        <button class="button" type="submit" form="back" value="Submit">Back to settings</button>                                       
-    </form>
-    <div id="footer">%VERSION%</div>
+    <div class="container">
+        <div class="card">
+            <p class="card_title-info">GPIO Configuration</p>
+            <form class="card_form" action="/gpioConfigSave" method="post" id="gpioConfig">
+                <div class="input">
+                    <input type="text" class="input_field" required name="downGpio" id = "downGpio" value="%KEY_DOWN_GPIO%"/>
+                    <label class="input_label" for="downGpio">Key down GPIO</label>
+                </div>
+                <div class="input">
+                    <select class="select_field" id="downInvert" name="downInvert">
+                        <option value="0" %SELECTED_DOWN_INVERTED_NO%>Active high</option>
+                        <option value="1" %SELECTED_DOWN_INVERTED_YES%>Active low</option>
+                    </select>
+                    <label class="input_select_label" for="downInvert">Key down GPIO active level</label>
+                </div>
+                <div class="input">
+                    <input type="text" class="input_field" required name="upGpio" id = "upGpio" value="%KEY_UP_GPIO%"/>
+                    <label class="input_label" for="upGpio">Key up GPIO</label>
+                </div>
+                <div class="input">
+                    <select class="select_field" id="upInvert" name="upInvert">
+                        <option value="0" %SELECTED_UP_INVERTED_NO%>Active high</option>
+                        <option value="1" %SELECTED_UP_INVERTED_YES%>Active low</option>
+                    </select>
+                    <label class="input_select_label" for="upInvert">Key up GPIO active level</label>
+                </div>
+                <div class="input">
+                    <input type="text" class="input_field" required name="rdownGpio" id = "rdownGpio" value="%RELAY_DOWN_GPIO%"/>
+                    <label class="input_label" for="rdownGpio">Relay down GPIO</label>
+                </div>
+                <div class="input">
+                    <select class="select_field" id="rdownInvert" name="rdownInvert">
+                        <option value="0" %SELECTED_RDOWN_INVERTED_NO%>Active high</option>
+                        <option value="1" %SELECTED_RDOWN_INVERTED_YES%>Active low</option>
+                    </select>
+                    <label class="input_select_label" for="rdownInvert">Relay down GPIO active level</label>
+                </div>
+                <div class="input">
+                    <input type="text" class="input_field" required name="rupGpio" id = "rupGpio" value="%RELAY_UP_GPIO%"/>
+                    <label class="input_label" for="rupGpio">Relay up GPIO</label>
+                </div>
+                <div class="input">
+                    <select class="select_field" id="rupInvert" name="rupInvert">
+                        <option value="0" %SELECTED_RUP_INVERTED_NO%>Active high</option>
+                        <option value="1" %SELECTED_RUP_INVERTED_YES%>Active low</option>
+                    </select>
+                    <label class="input_select_label" for="rupInvert">Relay up GPIO active level</label>
+                </div>
+                <div class="input">
+                    <input type="text" class="input_field" required name="resetGpio" id = "resetGpio" value="%KEY_RESET_GPIO%"/>
+                    <label class="input_label" for="resetGpio">Reset key GPIO</label>
+                </div>
+                <div class="input">
+                    <select class="select_field" id="resetInvert" name="resetInvert">
+                        <option value="0" %SELECTED_KEY_RESET_INVERTED_NO%>Active high</option>
+                        <option value="1" %SELECTED_KEY_RESET_INVERTED_YES%>Active low</option>
+                    </select>
+                    <label class="input_select_label" for="resetInvert">Reset key GPIO active level</label>
+                </div>
+                <button class="button" type="submit" form="gpioConfig" value="Submit">Save</button>
+            </form>
+            <form action="/settings" id="back">
+                <button class="button" type="submit" form="back" value="Submit">Back to settings</button>                                       
+            </form>
+            <p class="card_title-info">
+                <div class="version">
+                 v%VERSION%
+                </div>
+            </p>
+        <div>
+    </div>
  </body>
 </html>

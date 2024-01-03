@@ -5,20 +5,29 @@
   <link rel="stylesheet" href="default.css">
 </head>
 <body>
-    <h2>Louver control config</h2>
-    %MODULE_NAME%
-    <h3>Module config</h3>
-    <div class="rect">
-        <form action="/moduleConfigSave" method="post" id="moduleConfig">
-            <label for="name">Module name:</label>
-            <input type="text" name="name" id="name" value="%MODULE_NAME%">
-            <br />
-            <button class="button" type="submit" form="moduleConfig" value="Submit">Save</button>                                       
-        </form>
+    <div class="header">
+        <h1>Louver control config</h1>
+        <p class="module_title-info">%MODULE_NAME%</p>
     </div>
-    <form action="/settings" id="back">
-        <button class="button" type="submit" form="back" value="Submit">Back to settings</button>                                       
-    </form>
-    <div id="footer">%VERSION%</div>
+    <div class="container">
+        <div class="card">
+            <p class="card_title-info">Module Configuration</p>
+            <form class="card_form" action="/moduleConfigSave" method="post" id="moduleConfig">
+                <div class="input">
+                    <input type="text" class="input_field" required name="name" id = "name" value="%MODULE_NAME%"/>
+                    <label class="input_label" for="name">Module name</label>
+                </div>
+                <button class="button" type="submit" form="gpioConfig" value="Submit">Save</button>
+            </form>
+            <form action="/settings" id="back">
+                <button class="button" type="submit" form="back" value="Submit">Back to settings</button>                                       
+            </form>
+            <p class="card_title-info">
+                <div class="version">
+                 v%VERSION%
+                </div>
+            </p>
+        </div>
+    </div>
 </body>
 </html>

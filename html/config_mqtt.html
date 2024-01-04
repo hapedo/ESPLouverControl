@@ -14,6 +14,13 @@
             <p class="card_title-info">MQTT Configuration</p>
             <form class="card_form" action="/mqttConfigSave" method="post" id="mqttConfig">
                 <div class="input">
+                    <select class="select_field" id="enabled" name="enabled">
+                        <option value="0" %MQTT_ENABLED_NO%>Disabled</option>
+                        <option value="1" %MQTT_ENABLED_YES%>Enabled</option>
+                    </select>
+                    <label class="input_select_label" for="enabled">MQTT enabled</label>
+                </div>
+                <div class="input">
                     <input type="text" class="input_field" required name="clientId" id = "clientId" value="%MQTT_CLIENT_ID%"/>
                     <label class="input_label" for="clientId">Client ID</label>
                 </div>

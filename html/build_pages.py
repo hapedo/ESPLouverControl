@@ -10,14 +10,27 @@ def writeFile(fileName : str, lines):
     file.writelines(lines)
     file.close()
 
-def createRecord(fileName : str, variableName : str, functionName : str):
+def createRecord(fileName : str, variableName : str, functionName : str, utf8 : bool = False):
     d = dict()
     d["functionName"] = functionName
     d["variable"] = []
-    d["variable"].append("const char* {} PROGMEM = R\"rawliteral(\n".format(variableName))
     content = getFileContent(fileName)
-    d["variable"].extend(content)
-    d["variable"].append(")rawliteral\";\n")
+    if (not utf8):
+        d["variable"].append("const char* {} PROGMEM = R\"rawliteral(\n".format(variableName))
+        d["variable"].extend(content)
+        d["variable"].append(")rawliteral\";\n")
+    else:
+        for i in range(len(content)):
+            content[i] = content[i].encode("utf-8")
+        d["variable"].append("const char {}[] PROGMEM = {{\n".format(variableName))
+        for i in range(len(content)):
+            s = ""
+            for ii in range(len(content[i])):
+                s = s + hex(content[i][ii]) + ", "
+            if (i == len(content) - 1):
+                s = s[:len(s) - 2]
+            d["variable"].append(s + "\n")
+        d["variable"].append("};\n")
     d["function"] = []
     d["function"].append("const char* {}()\n".format(functionName))
     d["function"].append("{\n")
@@ -49,7 +62,8 @@ def recordsToHeaderString(records):
     return lines
 
 records = []
-records.append(createRecord("default.css", "httpDefaultCss", "getHttpDefaultCss"))
+# CSS requires to be encoded in UTF8 with BOM for ESP8266
+records.append(createRecord("default.css", "httpDefaultCss", "getHttpDefaultCss", True))
 records.append(createRecord("index.html", "httpIndex", "getHttpIndex"))
 records.append(createRecord("config_module.html", "httpModuleConfig", "getHttpModuleConfig"))
 records.append(createRecord("config_gpio.html", "httpGpioConfig", "getHttpGpioConfig"))

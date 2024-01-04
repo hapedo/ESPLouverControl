@@ -15,9 +15,9 @@ public:
 
     static uint32_t getChipId();
 
-    static void getResetGpioConfig(uint8_t& pinKey, bool& keyActiveHigh);
+    static void getResetGpioConfig(uint8_t& pinKey, bool& keyActiveHigh, bool& keyPullEnabled);
 
-    static void setResetGpioConfig(uint8_t pinKey, bool keyActiveHigh);
+    static void setResetGpioConfig(uint8_t pinKey, bool keyActiveHigh, bool keyPullEnabled);
 
     static void process();
 
@@ -43,6 +43,7 @@ private:
     String m_name;
     uint8_t m_pinKeyReset;
     bool m_pinKeyResetActiveHigh;
+    bool m_pinKeyResetPullEnabled;
     bool m_lastKeyResetState;
     uint64_t m_lastKeyResetChangeTime;
     bool m_reboot;

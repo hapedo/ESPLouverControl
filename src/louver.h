@@ -11,6 +11,7 @@ public:
     static constexpr uint8_t DEFAULT_PIN_RELAY_UP = PROFILE_DEFAULT_PIN_RELAY_UP;
     static constexpr uint8_t DEFAULT_PIN_RELAY_DOWN = PROFILE_DEFAULT_PIN_RELAY_DOWN;
     static constexpr bool DEFAULT_KEY_ACTIVE_HIGH = PROFILE_DEFAULT_KEY_ACTIVE_HIGH;
+    static constexpr bool DEFAULT_KEY_PULL_ACTIVE = PROFILE_DEFAULT_KEY_PULL_ACTIVE;
     static constexpr bool DEFAULT_RELAY_ACTIVE_HIGH = PROFILE_DEFAULT_RELAY_ACTIVE_HIGH;
     static constexpr float DEFAULT_TIME_UP_SECS = 30;
     static constexpr float DEFAULT_TIME_DOWN_SECS = 30;
@@ -35,9 +36,9 @@ public:
 
     static void loadConfig();
 
-    static void configureGpio(Direction dir, uint8_t pinKey, uint8_t pinRelay, bool keyActiveHigh = true, bool relayActiveHigh = true);
+    static void configureGpio(Direction dir, uint8_t pinKey, uint8_t pinRelay, bool keyActiveHigh = true, bool relayActiveHigh = true, bool enablePull = true);
 
-    static void getGpioConfig(Direction dir, uint8_t& pinKey, uint8_t& pinRelay, bool& keyActiveHigh, bool& relayActiveHigh);
+    static void getGpioConfig(Direction dir, uint8_t& pinKey, uint8_t& pinRelay, bool& keyActiveHigh, bool& relayActiveHigh, bool& pullEnabled);
 
     static void configureTimes(float timeFullOpenSecs, float timeFullCloseSecs, float timeOpenLamellasSecs, float shortMovementSecs);
 
@@ -107,6 +108,8 @@ private:
     bool m_keyDownActiveHigh;
     bool m_relayUpActiveHigh;
     bool m_relayDownActiveHigh;
+    bool m_keyUpPullEnabled;
+    bool m_keyDownPullEnabled;
     bool m_lastKeyUpState;
     bool m_lastKeyDownState;
     uint64_t m_lastKeyUpChangeTime;

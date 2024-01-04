@@ -164,11 +164,14 @@ void HttpServer::initPrivate()
         uint8_t relayDown;
         bool highKeyDown;
         bool highRelayDown;
-        Louver::getGpioConfig(Louver::DIR_UP, pinKeyUp, relayUp, highKeyUp, highRelayUp);
-        Louver::getGpioConfig(Louver::DIR_DOWN, pinKeyDown, relayDown, highKeyDown, highRelayDown);
+        bool pinKeyUpPullEnabled;
+        bool pinKeyDownPullEnabled;
+        Louver::getGpioConfig(Louver::DIR_UP, pinKeyUp, relayUp, highKeyUp, highRelayUp, pinKeyUpPullEnabled);
+        Louver::getGpioConfig(Louver::DIR_DOWN, pinKeyDown, relayDown, highKeyDown, highRelayDown, pinKeyDownPullEnabled);
         uint8_t pinKeyReset;
         bool highKeyReset;
-        Module::getResetGpioConfig(pinKeyReset, highKeyReset);
+        bool keyResetPullEnabled;
+        Module::getResetGpioConfig(pinKeyReset, highKeyReset, keyResetPullEnabled);
         String value;
         if (request->hasParam("downGpio", true))
         {
@@ -181,6 +184,13 @@ void HttpServer::initPrivate()
             else
                 highKeyDown = true;
         }
+        if (request->hasParam("downPull", true))
+        {
+            if (request->getParam("downPull", true)->value() == "1")
+                pinKeyDownPullEnabled = true;
+            else
+                pinKeyDownPullEnabled = false;
+        }
         if (request->hasParam("upGpio", true))
         {
             pinKeyUp = request->getParam("upGpio", true)->value().toInt();
@@ -191,6 +201,13 @@ void HttpServer::initPrivate()
                 highKeyUp = false;
             else
                 highKeyUp = true;
+        }
+        if (request->hasParam("upPull", true))
+        {
+            if (request->getParam("upPull", true)->value() == "1")
+                pinKeyUpPullEnabled = true;
+            else
+                pinKeyUpPullEnabled = false;
         }
         if (request->hasParam("rdownGpio", true))
         {
@@ -225,9 +242,16 @@ void HttpServer::initPrivate()
             else
                 highKeyReset = true;
         }
-        Louver::configureGpio(Louver::DIR_UP, pinKeyUp, relayUp, highKeyUp, highRelayUp);
-        Louver::configureGpio(Louver::DIR_DOWN, pinKeyDown, relayDown, highKeyDown, highRelayDown);
-        Module::setResetGpioConfig(pinKeyReset, highKeyReset);
+        if (request->hasParam("resetPull", true))
+        {
+            if (request->getParam("resetPull", true)->value() == "1")
+                keyResetPullEnabled = true;
+            else
+                keyResetPullEnabled = false;
+        }
+        Louver::configureGpio(Louver::DIR_UP, pinKeyUp, relayUp, highKeyUp, highRelayUp, pinKeyUpPullEnabled);
+        Louver::configureGpio(Louver::DIR_DOWN, pinKeyDown, relayDown, highKeyDown, highRelayDown, pinKeyDownPullEnabled);
+        Module::setResetGpioConfig(pinKeyReset, highKeyReset, keyResetPullEnabled);
         request->send_P(200, "text/html", getHttpConfigSaved(), defaultProcessor);
     });
     m_server.on("/timingConfig", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -329,9 +353,17 @@ void HttpServer::initPrivate()
     m_server.on("/mqttConfigSave", HTTP_POST, [](AsyncWebServerRequest *request){
         Log::debug("HTTP", "POST request, /mqttConfigSave");
         String value;
+        bool enabled = Mqtt::getEnabled();
         String brokerIp = Mqtt::getBrokerIp();
         uint16_t brokerPort = Mqtt::getBrokerPort();
         String clientId = Mqtt::getClientId();
+        if (request->hasParam("enabled", true))
+        {
+            if (request->getParam("enabled", true)->value() == "1")
+                enabled = true;
+            else
+                enabled = false;
+        }
         if (request->hasParam("clientId", true)) 
         {
             clientId = request->getParam("clientId", true)->value();
@@ -344,6 +376,7 @@ void HttpServer::initPrivate()
         {
             brokerPort = request->getParam("brokerPort", true)->value().toInt();
         }
+        Mqtt::setEnabled(enabled);
         Mqtt::setBrokerIp(brokerIp.c_str());
         Mqtt::setBrokerPort(brokerPort);
         Mqtt::setClientId(clientId.c_str());
@@ -449,11 +482,14 @@ String HttpServer::gpioConfigProcessor(const String& var)
     uint8_t relayDown;
     bool highKeyDown;
     bool highRelayDown;
-    Louver::getGpioConfig(Louver::DIR_UP, pinKeyUp, relayUp, highKeyUp, highRelayUp);
-    Louver::getGpioConfig(Louver::DIR_DOWN, pinKeyDown, relayDown, highKeyDown, highRelayDown);
+    bool pinKeyUpPullEnabled;
+    bool pinKeyDownPullEnabled;
+    Louver::getGpioConfig(Louver::DIR_UP, pinKeyUp, relayUp, highKeyUp, highRelayUp, pinKeyUpPullEnabled);
+    Louver::getGpioConfig(Louver::DIR_DOWN, pinKeyDown, relayDown, highKeyDown, highRelayDown, pinKeyDownPullEnabled);
     uint8_t pinKeyReset;
     bool highKeyReset;
-    Module::getResetGpioConfig(pinKeyReset, highKeyReset);
+    bool keyResetPullEnabled;
+    Module::getResetGpioConfig(pinKeyReset, highKeyReset, keyResetPullEnabled);
     if (var == "KEY_DOWN_GPIO")
         return String(pinKeyDown);
     if (var == "KEY_UP_GPIO")
@@ -468,9 +504,17 @@ String HttpServer::gpioConfigProcessor(const String& var)
         return "selected";
     if ((var == "SELECTED_UP_INVERTED_NO") && (highKeyUp))
         return "selected";
+    if ((var == "SELECTED_UP_PULL_YES") && (pinKeyUpPullEnabled))
+        return "selected";
+    if ((var == "SELECTED_UP_PULL_NO") && (!pinKeyUpPullEnabled))
+        return "selected";
     if ((var == "SELECTED_DOWN_INVERTED_YES") && (!highKeyDown))
         return "selected";
     if ((var == "SELECTED_DOWN_INVERTED_NO") && (highKeyDown))
+        return "selected";
+    if ((var == "SELECTED_DOWN_PULL_YES") && (pinKeyDownPullEnabled))
+        return "selected";
+    if ((var == "SELECTED_DOWN_PULL_NO") && (!pinKeyDownPullEnabled))
         return "selected";
     if ((var == "SELECTED_RUP_INVERTED_YES") && (!highRelayUp))
         return "selected";
@@ -483,6 +527,10 @@ String HttpServer::gpioConfigProcessor(const String& var)
     if ((var == "SELECTED_KEY_RESET_INVERTED_YES") && (!highKeyReset))
         return "selected";
     if ((var == "SELECTED_KEY_RESET_INVERTED_NO") && (highKeyReset))
+        return "selected";
+    if ((var == "SELECTED_KEY_RESET_PULL_YES") && (keyResetPullEnabled))
+        return "selected";
+    if ((var == "SELECTED_KEY_RESET_PULL_NO") && (!keyResetPullEnabled))
         return "selected";
     return defaultProcessor(var);
 }
@@ -530,6 +578,10 @@ String HttpServer::networkConfigProcessor(const String& var)
 
 String HttpServer::mqttConfigProcessor(const String& var)
 {
+    if ((var == "MQTT_ENABLED_NO") && (!Mqtt::getEnabled()))
+        return "selected";
+    if ((var == "MQTT_ENABLED_YES") && (Mqtt::getEnabled()))
+        return "selected";
     if (var == "MQTT_CLIENT_ID")
         return Mqtt::getClientId();
     if (var == "MQTT_BROKER_IP")

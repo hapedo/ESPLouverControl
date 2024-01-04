@@ -8,6 +8,7 @@ Module::Module() :
     m_name(DEFAULT_NAME),
     m_pinKeyReset(PROFILE_DEFAULT_PIN_KEY_RESET),
     m_pinKeyResetActiveHigh(PROFILE_DEFAULT_PIN_KEY_RESET_ACTIVE_HIGH),
+    m_pinKeyResetPullEnabled(PROFILE_DEFAULT_KEY_PULL_ACTIVE),
     m_lastKeyResetState(false),
     m_lastKeyResetChangeTime(0),
     m_reboot(false),
@@ -22,6 +23,7 @@ void Module::loadConfig()
     inst.m_name = Config::getString("module/name", DEFAULT_NAME);
     inst.m_pinKeyReset = Config::getInt("gpio/key_reset", PROFILE_DEFAULT_PIN_KEY_RESET);
     inst.m_pinKeyResetActiveHigh = Config::getBool("gpio/key_reset_active_high", PROFILE_DEFAULT_PIN_KEY_RESET_ACTIVE_HIGH);
+    inst.m_pinKeyResetPullEnabled = Config::getBool("gpio/key_reset_pull_enabled", PROFILE_DEFAULT_KEY_PULL_ACTIVE);
     inst.initPins();
     Log::info("Module", "Configuration loaded, name=\"%s\"", inst.m_name.c_str());
 }
@@ -53,20 +55,23 @@ uint32_t Module::getChipId()
 #endif
 }
 
-void Module::getResetGpioConfig(uint8_t& pinKey, bool& keyActiveHigh)
+void Module::getResetGpioConfig(uint8_t& pinKey, bool& keyActiveHigh, bool& keyPullEnabled)
 {
     Module& inst = getInstance();
     pinKey = inst.m_pinKeyReset;
     keyActiveHigh = inst.m_pinKeyResetActiveHigh;
+    keyPullEnabled = inst.m_pinKeyResetPullEnabled;
 }
 
-void Module::setResetGpioConfig(uint8_t pinKey, bool keyActiveHigh)
+void Module::setResetGpioConfig(uint8_t pinKey, bool keyActiveHigh, bool keyPullEnabled)
 {
     Module& inst = getInstance();
     inst.m_pinKeyReset = pinKey;
     Config::setInt("gpio/key_reset", inst.m_pinKeyReset);
     inst.m_pinKeyResetActiveHigh = keyActiveHigh;
     Config::setBool("gpio/key_reset_active_high", inst.m_pinKeyResetActiveHigh);
+    inst.m_pinKeyResetPullEnabled = keyPullEnabled;
+    Config::setBool("gpio/key_reset_pull_enabled", inst.m_pinKeyResetPullEnabled);
     Config::flush();
     inst.initPins();
     Log::info("Module", "Reset key configuration, pin = %d", pinKey);
@@ -74,7 +79,18 @@ void Module::setResetGpioConfig(uint8_t pinKey, bool keyActiveHigh)
 
 void Module::initPins()
 {
-    pinMode(m_pinKeyReset, INPUT);
+    uint8_t pull = INPUT_PULLUP;
+#ifdef ESP32
+    if (m_pinKeyResetActiveHigh)
+        pull = INPUT_PULLDOWN;
+#else
+    // No pulldown for ESP8266
+    if (m_pinKeyResetActiveHigh)
+        pull = 0;
+#endif
+    if (!m_pinKeyResetPullEnabled)
+        pull = 0;
+    pinMode(m_pinKeyReset, INPUT | pull);
 }
 
 void Module::reboot()

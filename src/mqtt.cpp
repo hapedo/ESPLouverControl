@@ -6,6 +6,7 @@
 
 Mqtt::Mqtt() :
     m_client(m_wifiClient),
+    m_enabled(false),
     m_brokerIp(DEFAULT_BROKER_IP),
     m_brokerPort(DEFAULT_BROKER_PORT),
     m_clientId(DEFAULT_CLIENT_ID),
@@ -17,10 +18,27 @@ Mqtt::Mqtt() :
 void Mqtt::loadConfig()
 {
     Mqtt& inst = getInstance();
+    inst.m_enabled = Config::getBool("mqtt/enabled", false);
     inst.m_brokerIp = Config::getString("mqtt/broker_ip", DEFAULT_BROKER_IP);
     inst.m_brokerPort = Config::getInt("mqtt/broker_port", DEFAULT_BROKER_PORT);
     inst.m_clientId = Config::getString("mqtt/client_id", DEFAULT_CLIENT_ID);
     Log::info("MQTT", "Configuration loaded, broker=%s:%d, client ID=\"%s\"", inst.m_brokerIp.c_str(), inst.m_brokerPort, inst.m_clientId.c_str());
+}
+
+bool Mqtt::getEnabled()
+{
+    return getInstance().m_enabled;
+}
+
+void Mqtt::setEnabled(bool enabled)
+{
+    Mqtt& inst = getInstance();
+    Log::info("MQTT", "MQTT enabled set to \"%d\"", enabled);
+    Config::setBool("mqtt/enabled", enabled);
+    Config::flush();
+    inst.m_enabled = enabled;
+    if (!enabled && inst.m_client.connected())
+        inst.m_client.disconnect();
 }
 
 String Mqtt::getBrokerIp()
@@ -129,10 +147,13 @@ void Mqtt::process()
     Mqtt& inst = getInstance();
     inst.m_client.loop();
     uint64_t now = Time::nowRelativeMilli();
-    if (!inst.m_client.connected() && (now >= inst.m_lastReconnectTime + RECONNECT_PERIOD_MILLI))
+    if (inst.m_enabled)
     {
-        inst.m_lastReconnectTime = now;
-        Log::info("MQTT", "Trying to reconnect");
-        inst.reconnect();
+        if (!inst.m_client.connected() && (now >= inst.m_lastReconnectTime + RECONNECT_PERIOD_MILLI))
+        {
+            inst.m_lastReconnectTime = now;
+            Log::info("MQTT", "Trying to reconnect");
+            inst.reconnect();
+        }
     }
 }

@@ -35,6 +35,8 @@ void Louver::setDefaultsPrivate()
     m_pinRelayDown = DEFAULT_PIN_RELAY_DOWN;
     m_keyUpActiveHigh = DEFAULT_KEY_ACTIVE_HIGH;
     m_keyDownActiveHigh = DEFAULT_KEY_ACTIVE_HIGH;
+    m_keyUpPullEnabled = DEFAULT_KEY_PULL_ACTIVE;
+    m_keyDownPullEnabled = DEFAULT_KEY_PULL_ACTIVE;
     m_relayUpActiveHigh = DEFAULT_RELAY_ACTIVE_HIGH;
     m_relayDownActiveHigh = DEFAULT_RELAY_ACTIVE_HIGH;
     m_timeUp = (uint32_t)(DEFAULT_TIME_UP_SECS * 1000);
@@ -53,6 +55,8 @@ void Louver::loadConfigPrivate()
     m_pinRelayDown = Config::getInt("gpio/relay_down", DEFAULT_PIN_RELAY_DOWN);
     m_keyUpActiveHigh = Config::getBool("gpio/key_up_active_high", DEFAULT_KEY_ACTIVE_HIGH);
     m_keyDownActiveHigh = Config::getBool("gpio/key_down_active_high", DEFAULT_KEY_ACTIVE_HIGH);
+    m_keyUpPullEnabled = Config::getBool("gpio/key_up_pull_enabled", DEFAULT_KEY_PULL_ACTIVE);
+    m_keyDownPullEnabled = Config::getBool("gpio/key_down_pull_enabled", DEFAULT_KEY_PULL_ACTIVE);
     m_relayUpActiveHigh = Config::getBool("gpio/relay_up_active_high", DEFAULT_RELAY_ACTIVE_HIGH);
     m_relayDownActiveHigh = Config::getBool("gpio/relay_down_active_high", DEFAULT_RELAY_ACTIVE_HIGH);
     m_timeUp = (uint32_t)(Config::getFloat("timing/up", DEFAULT_TIME_UP_SECS) * 1000);
@@ -63,7 +67,7 @@ void Louver::loadConfigPrivate()
     Log::info("Louver", "Configuration loaded");
 }
 
-void Louver::configureGpio(Direction dir, uint8_t pinKey, uint8_t pinRelay, bool keyActiveHigh, bool relayActiveHigh)
+void Louver::configureGpio(Direction dir, uint8_t pinKey, uint8_t pinRelay, bool keyActiveHigh, bool relayActiveHigh, bool enablePull)
 {
     Louver& inst = getInstance();
     if (dir == DIR_UP)
@@ -76,6 +80,8 @@ void Louver::configureGpio(Direction dir, uint8_t pinKey, uint8_t pinRelay, bool
         Config::setBool("gpio/key_up_active_high", inst.m_keyUpActiveHigh);
         inst.m_relayUpActiveHigh = relayActiveHigh;
         Config::setBool("gpio/relay_up_active_high", inst.m_relayUpActiveHigh);
+        inst.m_keyUpPullEnabled = enablePull;
+        Config::setBool("gpio/key_up_pull_enabled", inst.m_keyUpPullEnabled);
         Config::flush();
         inst.initPins();
         Log::info("Louver", "Up key configuration, pin = %d, relay pin = %d", pinKey, pinRelay);
@@ -90,13 +96,15 @@ void Louver::configureGpio(Direction dir, uint8_t pinKey, uint8_t pinRelay, bool
         Config::setBool("gpio/key_down_active_high", inst.m_keyDownActiveHigh);
         inst.m_relayDownActiveHigh = relayActiveHigh;
         Config::setBool("gpio/relay_down_active_high", inst.m_relayDownActiveHigh);
+        inst.m_keyDownPullEnabled = enablePull;
+        Config::setBool("gpio/key_down_pull_enabled", inst.m_keyDownPullEnabled);
         Config::flush();
         inst.initPins();
         Log::info("Louver", "Down key configuration, pin = %d, relay pin = %d", pinKey, pinRelay);
     }
 }
 
-void Louver::getGpioConfig(Direction dir, uint8_t& pinKey, uint8_t& pinRelay, bool& keyActiveHigh, bool& relayActiveHigh)
+void Louver::getGpioConfig(Direction dir, uint8_t& pinKey, uint8_t& pinRelay, bool& keyActiveHigh, bool& relayActiveHigh, bool& pullEnabled)
 {
     Louver& inst = getInstance();
     if (dir == DIR_UP)
@@ -105,6 +113,7 @@ void Louver::getGpioConfig(Direction dir, uint8_t& pinKey, uint8_t& pinRelay, bo
         pinRelay = inst.m_pinRelayUp;
         keyActiveHigh = inst.m_keyUpActiveHigh;
         relayActiveHigh = inst.m_relayUpActiveHigh;
+        pullEnabled = inst.m_keyUpPullEnabled;
     }
     else
     {
@@ -112,6 +121,7 @@ void Louver::getGpioConfig(Direction dir, uint8_t& pinKey, uint8_t& pinRelay, bo
         pinRelay = inst.m_pinRelayDown;
         keyActiveHigh = inst.m_keyDownActiveHigh;
         relayActiveHigh = inst.m_relayDownActiveHigh;
+        pullEnabled = inst.m_keyDownPullEnabled;
     }
 }
 
@@ -219,8 +229,30 @@ void Louver::stop()
 
 void Louver::initPins()
 {
-    pinMode(m_pinKeyUp, INPUT);
-    pinMode(m_pinKeyDown, INPUT);
+    uint8_t pull = INPUT_PULLUP;
+#ifdef ESP32
+    if (m_keyUpActiveHigh)
+        pull = INPUT_PULLDOWN;
+#else
+    // No pulldown for ESP8266
+    if (m_keyUpActiveHigh)
+        pull = 0;
+#endif
+    if (!m_keyUpPullEnabled)
+        pull = 0;
+    pinMode(m_pinKeyUp, INPUT | pull);
+    pull = INPUT_PULLUP;
+#ifdef ESP32
+    if (m_keyDownActiveHigh)
+        pull = INPUT_PULLDOWN;
+#else
+    // No pulldown for ESP8266
+    if (m_keyDownActiveHigh)
+        pull = 0;
+#endif
+    if (!m_keyDownPullEnabled)
+        pull = 0;
+    pinMode(m_pinKeyDown, INPUT | pull);
     pinMode(m_pinRelayUp, OUTPUT);
     pinMode(m_pinRelayDown, OUTPUT);
     if (m_relayUpActiveHigh)

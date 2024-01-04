@@ -1,5 +1,9 @@
 #pragma once
-#include <WiFi.h>
+#ifdef ESP32
+    #include <WiFi.h>
+#else
+    #include <ESP8266WiFi.h>
+#endif
 #include <PubSubClient.h>
 
 class Mqtt
@@ -13,6 +17,10 @@ public:
     static constexpr uint16_t DEFAULT_BROKER_PORT = 1883;
 
     static void loadConfig();
+
+    static bool getEnabled();
+
+    static void setEnabled(bool enabled);
 
     static String getBrokerIp();
 
@@ -30,7 +38,7 @@ public:
 
 private:
 
-    static constexpr uint32_t RECONNECT_PERIOD_MILLI = 5000;
+    static constexpr uint32_t RECONNECT_PERIOD_MILLI = (30 * 1000);
 
     Mqtt();
 
@@ -46,6 +54,7 @@ private:
 
     WiFiClient m_wifiClient;
     PubSubClient m_client;
+    bool m_enabled;
     String m_brokerIp;
     uint16_t m_brokerPort;
     String m_clientId;

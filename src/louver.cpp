@@ -453,7 +453,7 @@ void Louver::process()
             if (isKeyDownActive && isDownHoldDebounced)
             {
                 Log::info("Louver", "Down hold detected");
-                inst.fullCloseAndOpenLamellas();
+                inst.fullClose();
             }
             break;
         case ST_MOVEMENT:

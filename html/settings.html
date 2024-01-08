@@ -12,11 +12,14 @@
     <div class="container">
         <div class="card">
             <p class="card_title-info">Settings</p>
+            <form action="/moduleInfo" id="moduleInfo">
+                <button class="button" type="submit" form="moduleInfo" value="Submit">Module info</button>                                       
+            </form>    
             <form action="/moduleConfig" id="moduleConfig">
                 <button class="button" type="submit" form="moduleConfig" value="Submit">Module config</button>                                       
             </form>    
-            <form action="/timingConfig" id="timingConfig">
-                <button class="button" type="submit" form="timingConfig" value="Submit">Timing config</button>                                       
+            <form action="/movementConfig" id="movementConfig">
+                <button class="button" type="submit" form="movementConfig" value="Submit">Movement config</button>                                       
             </form>    
             <form action="/gpioConfig" id="gpioConfig">
                 <button class="button" type="submit" form="gpioConfig" value="Submit">GPIO config</button>                                       
@@ -26,6 +29,9 @@
             </form>    
             <form action="/mqttConfig" id="mqttConfig">
                 <button class="button" type="submit" form="mqttConfig" value="Submit">MQTT config</button>                                       
+            </form>    
+            <form action="/powerMeasConfig" id="powerMeasConfig">
+                <button class="button" type="submit" form="powerMeasConfig" value="Submit">Power measurement config</button>                                       
             </form>    
             <form action="/update" id="firmwareUpdate">
                 <button class="button" type="submit" form="firmwareUpdate" value="Submit">Firmware update (OTA)</button>                                       

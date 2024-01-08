@@ -1,0 +1,96 @@
+<!DOCTYPE HTML><html>
+<head>
+  <title>Louver control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="default.css">
+  <script "text/javascript">
+    function injectPowerMeas(json) {
+        let powerMeas = document.querySelector('#power_meas');
+        let out = "";
+        if (json.hasOwnProperty("power_meas") && (json["power_meas"].length > 0))
+        {
+            out = out + "<table>";
+            for(let i = 0; i < json["power_meas"].length; i++) {
+                out = out + "<tr>";
+                let obj = json["power_meas"][i];
+                out = out + "<td class=\"col1\">" + obj["description"] + "</td>"; 
+                out = out + "<td class=\"col2\">" + obj["lastValue"] + " " + obj["unit"] + "</td>"; 
+                out = out + "</tr>";
+            }
+            out = out + "</table>";
+        }
+        else
+        {
+            out = "Disabled or invalid data (bad configuration)"
+        }
+        powerMeas.innerHTML = out;
+    }
+
+    function requestPowerMeas() {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                var myArr = JSON.parse(this.responseText);
+                injectPowerMeas(myArr);
+            }
+        };
+        xmlhttp.open("GET", "/powerMeasurementExport", true);
+        xmlhttp.send();
+    }
+
+    function run() {
+        //json = "{\"values\":[{\"description\":\"Voltage RMS\",\"unit\":\"V\",\"valueFormat\":\".0f\",\"lastValue\":0.45,\"minValue\":0.00,\"maxValue\":0.62},{\"description\":\"Current 1 RMS\",\"unit\":\"A\",\"valueFormat\":\".3f\",\"lastValue\":0.00,\"minValue\":0.00,\"maxValue\":0.00},{\"description\":\"Current 2 RMS\",\"unit\":\"A\",\"valueFormat\":\".3f\",\"lastValue\":0.00,\"minValue\":0.00,\"maxValue\":0.00}]}";
+        //json = JSON.parse(json)
+        var intervalId = setInterval(function() {
+            requestPowerMeas();
+            }, 1000);
+        //injectPowerMeas(json);
+        requestPowerMeas();
+    }
+
+    window.onload = run;
+  </script>
+</head>
+<body>
+    <div class="header">
+        <h1>Louver control config</h1>
+        <p class="module_title-info">%MODULE_NAME%</p>
+    </div>
+    <div class="container">
+        <div class="card">
+            <p class="card_title-info">Module info</p>
+            <table>
+                <tr>
+                    <td class="col1">
+                        Module name:
+                    </td>
+                    <td class="col2">
+                        %MODULE_NAME%
+                    </td>
+                </tr>
+            </table>
+            <p class="card_title-info">Power measurement</p>
+            <div id="power_meas">
+            <table>
+                <tr>
+                    <td class="col1">
+                        Module name:
+                    </td>
+                    <td class="col2">
+                        %MODULE_NAME%
+                    </td>
+                </tr>
+            </table>
+            </div>
+            <form action="/settings" id="back">
+                <button class="button" type="submit" form="back" value="Submit">Back to settings</button>                                       
+            </form>
+            <p class="card_title-info">
+                <div class="version">
+                 v%VERSION%
+                </div>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

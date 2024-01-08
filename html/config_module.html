@@ -17,7 +17,11 @@
                     <input type="text" class="input_field" required name="name" id = "name" value="%MODULE_NAME%"/>
                     <label class="input_label" for="name">Module name</label>
                 </div>
-                <button class="button" type="submit" form="gpioConfig" value="Submit">Save</button>
+                <div class="input">
+                    <input type="text" class="input_field" required name="logLevelOverride" id = "logLevelOverride" value="%MODULE_LOG_LEVEL_OVERRIDE%"/>
+                    <label class="input_label" for="logLevelOverride">Modules log level override (JSON format: {\"module" : maxLevel})</label>
+                </div>
+                <button class="button" type="submit" form="moduleConfig" value="Submit">Save</button>
             </form>
             <form action="/settings" id="back">
                 <button class="button" type="submit" form="back" value="Submit">Back to settings</button>                                       

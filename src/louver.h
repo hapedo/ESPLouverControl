@@ -28,6 +28,7 @@ public:
     {
         Direction direction;
         uint32_t timeMilli;
+        bool checkConditions;
     };
 
     Louver();
@@ -45,6 +46,10 @@ public:
     static void getTimesConfig(float& timeFullOpenSecs, float& timeFullCloseSecs, float& timeOpenLamellasSecs, float& shortMovementSecs);
 
     static float getShortMovementSecs();
+
+    static void configurePowerCondStop(bool upStopCond1, bool downStopCodn2);
+
+    static void getPowerCondStop(bool& upStopCond1, bool& downStopCodn2);
 
     static void fullOpen();
 
@@ -118,6 +123,8 @@ private:
     uint32_t m_timeDown;
     uint32_t m_timeOpenLamellas;
     uint32_t m_timeShortMovement;
+    bool m_stopUpOnPowerCond1;
+    bool m_stopDownOnPowerCond2;
     State m_state;
     State m_nextState;
     uint8_t m_closePercent;
@@ -126,4 +133,5 @@ private:
     int m_stepIndex;
     uint64_t m_delayTimeout;
     std::vector<MovementStep> m_movement;
+    uint64_t m_movementStartTime;
 };

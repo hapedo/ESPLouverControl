@@ -212,7 +212,22 @@ const char httpDefaultCss[] PROGMEM = {
 0x20, 0x20, 0x62, 0x6f, 0x74, 0x74, 0x6f, 0x6d, 0x3a, 0x20, 0x32, 0x30, 0x70, 0x78, 0x3b, 0xa, 
 0x20, 0x20, 0x72, 0x69, 0x67, 0x68, 0x74, 0x3a, 0x20, 0x32, 0x30, 0x70, 0x78, 0x3b, 0xa, 
 0x20, 0x20, 0x7a, 0x2d, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x3a, 0x20, 0x33, 0x3b, 0xa, 
-0x7d, 0xa
+0x7d, 0xa, 
+0xa, 
+0x74, 0x61, 0x62, 0x6c, 0x65, 0x20, 0x7b, 0xa, 
+0x20, 0x20, 0x20, 0x20, 0x77, 0x69, 0x64, 0x74, 0x68, 0x3a, 0x20, 0x31, 0x30, 0x30, 0x25, 0x3b, 0xa, 
+0x7d, 0xa, 
+0xa, 
+0x74, 0x64, 0x2e, 0x63, 0x6f, 0x6c, 0x31, 0x20, 0x7b, 0xa, 
+0x20, 0x20, 0x20, 0x20, 0x77, 0x69, 0x64, 0x74, 0x68, 0x3a, 0x20, 0x35, 0x30, 0x25, 0x3b, 0xa, 
+0x20, 0x20, 0x20, 0x20, 0x74, 0x65, 0x78, 0x74, 0x2d, 0x61, 0x6c, 0x69, 0x67, 0x6e, 0x3a, 0x20, 0x6c, 0x65, 0x66, 0x74, 0x3b, 0xa, 
+0x20, 0x20, 0x20, 0x20, 0x66, 0x6f, 0x6e, 0x74, 0x2d, 0x77, 0x65, 0x69, 0x67, 0x68, 0x74, 0x3a, 0x20, 0x62, 0x6f, 0x6c, 0x64, 0x3b, 0xa, 
+0x7d, 0xa, 
+0xa, 
+0x74, 0x64, 0x2e, 0x63, 0x6f, 0x6c, 0x32, 0x20, 0x7b, 0xa, 
+0x20, 0x20, 0x20, 0x20, 0x77, 0x69, 0x64, 0x74, 0x68, 0x3a, 0x20, 0x35, 0x30, 0x25, 0x3b, 0xa, 
+0x20, 0x20, 0x20, 0x20, 0x74, 0x65, 0x78, 0x74, 0x2d, 0x61, 0x6c, 0x69, 0x67, 0x6e, 0x3a, 0x20, 0x6c, 0x65, 0x66, 0x74, 0x3b, 0xa, 
+0x7d
 };
 
 const char* httpIndex PROGMEM = R"rawliteral(
@@ -258,6 +273,104 @@ function buttonPressed(element) {
 </body>
 </html>)rawliteral";
 
+const char* httpModuleInfo PROGMEM = R"rawliteral(
+<!DOCTYPE HTML><html>
+<head>
+  <title>Louver control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="default.css">
+  <script "text/javascript">
+    function injectPowerMeas(json) {
+        let powerMeas = document.querySelector('#power_meas');
+        let out = "";
+        if (json.hasOwnProperty("power_meas") && (json["power_meas"].length > 0))
+        {
+            out = out + "<table>";
+            for(let i = 0; i < json["power_meas"].length; i++) {
+                out = out + "<tr>";
+                let obj = json["power_meas"][i];
+                out = out + "<td class=\"col1\">" + obj["description"] + "</td>"; 
+                out = out + "<td class=\"col2\">" + obj["lastValue"] + " " + obj["unit"] + "</td>"; 
+                out = out + "</tr>";
+            }
+            out = out + "</table>";
+        }
+        else
+        {
+            out = "Disabled or invalid data (bad configuration)"
+        }
+        powerMeas.innerHTML = out;
+    }
+
+    function requestPowerMeas() {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                var myArr = JSON.parse(this.responseText);
+                injectPowerMeas(myArr);
+            }
+        };
+        xmlhttp.open("GET", "/powerMeasurementExport", true);
+        xmlhttp.send();
+    }
+
+    function run() {
+        //json = "{\"values\":[{\"description\":\"Voltage RMS\",\"unit\":\"V\",\"valueFormat\":\".0f\",\"lastValue\":0.45,\"minValue\":0.00,\"maxValue\":0.62},{\"description\":\"Current 1 RMS\",\"unit\":\"A\",\"valueFormat\":\".3f\",\"lastValue\":0.00,\"minValue\":0.00,\"maxValue\":0.00},{\"description\":\"Current 2 RMS\",\"unit\":\"A\",\"valueFormat\":\".3f\",\"lastValue\":0.00,\"minValue\":0.00,\"maxValue\":0.00}]}";
+        //json = JSON.parse(json)
+        var intervalId = setInterval(function() {
+            requestPowerMeas();
+            }, 1000);
+        //injectPowerMeas(json);
+        requestPowerMeas();
+    }
+
+    window.onload = run;
+  </script>
+</head>
+<body>
+    <div class="header">
+        <h1>Louver control config</h1>
+        <p class="module_title-info">%MODULE_NAME%</p>
+    </div>
+    <div class="container">
+        <div class="card">
+            <p class="card_title-info">Module info</p>
+            <table>
+                <tr>
+                    <td class="col1">
+                        Module name:
+                    </td>
+                    <td class="col2">
+                        %MODULE_NAME%
+                    </td>
+                </tr>
+            </table>
+            <p class="card_title-info">Power measurement</p>
+            <div id="power_meas">
+            <table>
+                <tr>
+                    <td class="col1">
+                        Module name:
+                    </td>
+                    <td class="col2">
+                        %MODULE_NAME%
+                    </td>
+                </tr>
+            </table>
+            </div>
+            <form action="/settings" id="back">
+                <button class="button" type="submit" form="back" value="Submit">Back to settings</button>                                       
+            </form>
+            <p class="card_title-info">
+                <div class="version">
+                 v%VERSION%
+                </div>
+            </p>
+        </div>
+    </div>
+</body>
+</html>)rawliteral";
+
 const char* httpModuleConfig PROGMEM = R"rawliteral(
 <!DOCTYPE HTML><html>
 <head>
@@ -278,7 +391,11 @@ const char* httpModuleConfig PROGMEM = R"rawliteral(
                     <input type="text" class="input_field" required name="name" id = "name" value="%MODULE_NAME%"/>
                     <label class="input_label" for="name">Module name</label>
                 </div>
-                <button class="button" type="submit" form="gpioConfig" value="Submit">Save</button>
+                <div class="input">
+                    <input type="text" class="input_field" required name="logLevelOverride" id = "logLevelOverride" value="%MODULE_LOG_LEVEL_OVERRIDE%"/>
+                    <label class="input_label" for="logLevelOverride">Modules log level override (JSON format: {\"module" : maxLevel})</label>
+                </div>
+                <button class="button" type="submit" form="moduleConfig" value="Submit">Save</button>
             </form>
             <form action="/settings" id="back">
                 <button class="button" type="submit" form="back" value="Submit">Back to settings</button>                                       
@@ -400,7 +517,7 @@ const char* httpGpioConfig PROGMEM = R"rawliteral(
  </body>
 </html>)rawliteral";
 
-const char* httpTimingConfig PROGMEM = R"rawliteral(
+const char* httpMovementConfig PROGMEM = R"rawliteral(
 <!DOCTYPE HTML><html>
 <head>
   <title>Louver control</title>
@@ -414,8 +531,8 @@ const char* httpTimingConfig PROGMEM = R"rawliteral(
     </div>
     <div class="container">
         <div class="card">
-            <p class="card_title-info">Timing Configuration</p>
-            <form class="card_form" action="/timingConfigSave" method="post" id="timeConfig">
+            <p class="card_title-info">Movement Configuration</p>
+            <form class="card_form" action="/movementConfigSave" method="post" id="timeConfig">
                 <div class="input">
                     <input type="text" class="input_field" required name="timeFullOpen" id = "timeFullOpen" value="%TIME_FULL_OPEN%"/>
                     <label class="input_label" for="timeFullOpen">Full open [s]</label>
@@ -431,6 +548,20 @@ const char* httpTimingConfig PROGMEM = R"rawliteral(
                 <div class="input">
                     <input type="text" class="input_field" required name="timeOpenLamellas" id = "timeOpenLamellas" value="%TIME_OPEN_LAMELLAS%"/>
                     <label class="input_label" for="timeOpenLamellas">Open lamellas [s]</label>
+                </div>
+                <div class="input">
+                    <select class="select_field" id="stopOpenOnPowerCond1" name="stopOpenOnPowerCond1">
+                        <option value="0" %SELECTED_OPEN_STOP_PWRCOND1_NO%>No</option>
+                        <option value="1" %SELECTED_OPEN_STOP_PWRCOND1_YES%>Yes</option>
+                    </select>
+                    <label class="input_select_label" for="stopOpenOnPowerCond1">Stop open movement on power condition 1</label>
+                </div>
+                <div class="input">
+                    <select class="select_field" id="stopCloseOnPowerCond2" name="stopCloseOnPowerCond2">
+                        <option value="0" %SELECTED_CLOSE_STOP_PWRCOND2_NO%>No</option>
+                        <option value="1" %SELECTED_CLOSE_STOP_PWRCOND2_YES%>Yes</option>
+                    </select>
+                    <label class="input_select_label" for="stopCloseOnPowerCond2">Stop close movement on power condition 2</label>
                 </div>
                 <button class="button" type="submit" form="timeConfig" value="Submit">Save</button>
             </form>
@@ -487,11 +618,22 @@ const char* httpNetworkConfig PROGMEM = R"rawliteral(
                     <label class="input_label" for="clientPass">Client password</label>
                 </div>
                 <div class="input">
+                    <input type="text" class="input_field" required name="mDNSHost" id = "mDNSHost" value="%NETWORK_MDNS_HOST%"/>
+                    <label class="input_label" for="mDNSHost">mDNS hostname:</label>
+                </div>
+                <div class="input">
                     <select class="select_field" id="clientBehavior" name="clientBehavior">
                         <option value="0" %SELECTED_CLIENT_BEHAVIOR_0%>1m in client, 5mins in AP</option>
                         <option value="1" %SELECTED_CLIENT_BEHAVIOR_1%>Permanent client</option>
                     </select>
                     <label class="input_select_label" for="clientBehavior">Client behavior when cannot connect</label>
+                </div>
+                <div class="input">
+                    <select class="select_field" id="telnetLoggingEnabled" name="telnetLoggingEnabled">
+                        <option value="0" %SELECTED_TELNET_LOG_NO%>No</option>
+                        <option value="1" %SELECTED_TELNET_LOG_YES%>Yes</option>
+                    </select>
+                    <label class="input_select_label" for="telnetLoggingEnabled">Telnet logging enabled</label>
                 </div>
                 <button class="button" type="submit" form="networkConfig" value="Submit">Save</button>
             </form>
@@ -558,6 +700,56 @@ const char* httpMqttConfig PROGMEM = R"rawliteral(
 </body>
 </html>)rawliteral";
 
+const char* httpPowerMeasConfig PROGMEM = R"rawliteral(
+<!DOCTYPE HTML><html>
+<head>
+  <title>Louver control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="default.css">
+</head>
+<body>
+    <div class="header">
+        <h1>Louver control config</h1>
+        <p class="module_title-info">%MODULE_NAME%</p>
+    </div>
+    <div class="container">
+        <div class="card">
+            <p class="card_title-info">Power Measurement Configuration</p>
+            <form class="card_form" action="/powerMeasConfigSave" method="post" id="powerMeasConfig">
+                <div class="input">
+                    <select class="select_field" id="deviceType" name="deviceType">
+                        <option value="0" %POWER_MEAS_DRIVER_0%>Disabled</option>
+                        <option value="1" %POWER_MEAS_DRIVER_1%>BL0939</option>
+                    </select>
+                    <label class="input_select_label" for="deviceType">Power measurement driver</label>
+                </div>
+                <div class="input">
+                    <input type="text" class="input_field" name="powerMeasStopCond1" id = "powerMeasStopCond1" value="%POWER_MEAS_STOP_COND_1%"/>
+                    <label class="input_label" for="powerMeasStopCond1">Stop condition 1</label>
+                </div>
+                <div class="input">
+                    <input type="text" class="input_field" name="powerMeasStopCond2" id = "powerMeasStopCond2" value="%POWER_MEAS_STOP_COND_2%"/>
+                    <label class="input_label" for="powerMeasStopCond2">Stop condition 2</label>
+                </div>
+                <div class="input">
+                    <input type="text" class="input_field" name="bl0939Config" id = "bl0939Config" value="%POWER_MEAS_BL0939_CONFIG%"/>
+                    <label class="input_label" for="bl0939Config">BL0939 configuration</label>
+                </div>
+                <button class="button" type="submit" form="powerMeasConfig" value="Submit">Save</button>
+            </form>
+            <form action="/settings" id="back">
+                <button class="button" type="submit" form="back" value="Submit">Back to settings</button>                                       
+            </form>
+            <p class="card_title-info">
+                <div class="version">
+                 v%VERSION%
+                </div>
+            </p>
+        </div>
+    </div>
+</body>
+</html>)rawliteral";
+
 const char* httpSettings PROGMEM = R"rawliteral(
 <!DOCTYPE HTML><html>
 <head>
@@ -573,11 +765,14 @@ const char* httpSettings PROGMEM = R"rawliteral(
     <div class="container">
         <div class="card">
             <p class="card_title-info">Settings</p>
+            <form action="/moduleInfo" id="moduleInfo">
+                <button class="button" type="submit" form="moduleInfo" value="Submit">Module info</button>                                       
+            </form>    
             <form action="/moduleConfig" id="moduleConfig">
                 <button class="button" type="submit" form="moduleConfig" value="Submit">Module config</button>                                       
             </form>    
-            <form action="/timingConfig" id="timingConfig">
-                <button class="button" type="submit" form="timingConfig" value="Submit">Timing config</button>                                       
+            <form action="/movementConfig" id="movementConfig">
+                <button class="button" type="submit" form="movementConfig" value="Submit">Movement config</button>                                       
             </form>    
             <form action="/gpioConfig" id="gpioConfig">
                 <button class="button" type="submit" form="gpioConfig" value="Submit">GPIO config</button>                                       
@@ -587,6 +782,9 @@ const char* httpSettings PROGMEM = R"rawliteral(
             </form>    
             <form action="/mqttConfig" id="mqttConfig">
                 <button class="button" type="submit" form="mqttConfig" value="Submit">MQTT config</button>                                       
+            </form>    
+            <form action="/powerMeasConfig" id="powerMeasConfig">
+                <button class="button" type="submit" form="powerMeasConfig" value="Submit">Power measurement config</button>                                       
             </form>    
             <form action="/update" id="firmwareUpdate">
                 <button class="button" type="submit" form="firmwareUpdate" value="Submit">Firmware update (OTA)</button>                                       
@@ -670,6 +868,11 @@ const char* getHttpIndex()
     return httpIndex;
 }
 
+const char* getHttpModuleInfo()
+{
+    return httpModuleInfo;
+}
+
 const char* getHttpModuleConfig()
 {
     return httpModuleConfig;
@@ -680,9 +883,9 @@ const char* getHttpGpioConfig()
     return httpGpioConfig;
 }
 
-const char* getHttpTimingConfig()
+const char* getHttpMovementConfig()
 {
-    return httpTimingConfig;
+    return httpMovementConfig;
 }
 
 const char* getHttpNetworkConfig()
@@ -693,6 +896,11 @@ const char* getHttpNetworkConfig()
 const char* getHttpMqttConfig()
 {
     return httpMqttConfig;
+}
+
+const char* getHttpPowerMeasConfig()
+{
+    return httpPowerMeasConfig;
 }
 
 const char* getHttpSettings()

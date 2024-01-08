@@ -3,12 +3,15 @@
 #include "time.h"
 #include "log.h"
 #include "config.h"
+#include "power_meas.h"
 
 Louver::Louver() :
     m_lastKeyUpState(false),
     m_lastKeyDownState(false),
     m_lastKeyUpChangeTime(0),
     m_lastKeyDownChangeTime(0),
+    m_stopUpOnPowerCond1(false),
+    m_stopDownOnPowerCond2(false),
     m_state(ST_IDLE),
     m_closePercent(0),
     m_keyUpReleased(false),
@@ -43,6 +46,8 @@ void Louver::setDefaultsPrivate()
     m_timeDown = (uint32_t)(DEFAULT_TIME_DOWN_SECS * 1000);
     m_timeOpenLamellas = (uint32_t)(DEFAULT_TIME_OPEN_LAMELLAS_SECS * 1000);
     m_timeShortMovement = (uint32_t)(DEFAULT_TIME_SHORT_MOVEMENT_SECS * 1000);
+    m_stopUpOnPowerCond1 = false;
+    m_stopDownOnPowerCond2 = false;
     initPins();
     Log::info("Louver", "Defaults set");
 }
@@ -63,6 +68,8 @@ void Louver::loadConfigPrivate()
     m_timeDown = (uint32_t)(Config::getFloat("timing/down", DEFAULT_TIME_DOWN_SECS) * 1000);
     m_timeOpenLamellas = (uint32_t)(Config::getFloat("timing/open_lamellas", DEFAULT_TIME_OPEN_LAMELLAS_SECS) * 1000);
     m_timeShortMovement = (uint32_t)(Config::getFloat("timing/short_movement", DEFAULT_TIME_SHORT_MOVEMENT_SECS) * 1000);
+    m_stopUpOnPowerCond1 = Config::getBool("timing/stop_up_on_power_cond_1", false);
+    m_stopDownOnPowerCond2 = Config::getBool("timing/stop_down_on_power_cond_2", false);
     initPins();
     Log::info("Louver", "Configuration loaded");
 }
@@ -154,12 +161,29 @@ float Louver::getShortMovementSecs()
     return (float)getInstance().m_timeShortMovement / 1000;
 }
 
+void Louver::configurePowerCondStop(bool upStopCond1, bool downStopCodn2)
+{
+    Louver& inst = getInstance();
+    inst.m_stopUpOnPowerCond1 = upStopCond1;
+    inst.m_stopDownOnPowerCond2 = downStopCodn2;
+    Config::setBool("timing/stop_up_on_power_cond_1", upStopCond1);
+    Config::setBool("timing/stop_down_on_power_cond_2", downStopCodn2);
+    Log::info("Louver", "Power stop condition set, up=%d, down=%d", inst.m_stopUpOnPowerCond1, inst.m_stopDownOnPowerCond2);
+}
+
+void Louver::getPowerCondStop(bool& upStopCond1, bool& downStopCodn2)
+{
+    upStopCond1 = getInstance().m_stopUpOnPowerCond1;
+    downStopCodn2 = getInstance().m_stopDownOnPowerCond2;
+}
+
 void Louver::fullOpen()
 {
     Louver& inst = getInstance();
     MovementStep step;
     step.direction = DIR_UP;
-    step.timeMilli = Time::nowRelativeMilli() + inst.m_timeUp;
+    step.timeMilli = inst.m_timeUp;
+    step.checkConditions = true;
     inst.m_movement.clear();
     inst.m_movement.push_back(step);
     Log::info("Louver", "Full open movement");
@@ -171,7 +195,8 @@ void Louver::fullClose()
     Louver& inst = getInstance();
     MovementStep step;
     step.direction = DIR_DOWN;
-    step.timeMilli = Time::nowRelativeMilli() + inst.m_timeDown;
+    step.timeMilli = inst.m_timeDown;
+    step.checkConditions = true;
     inst.m_movement.clear();
     inst.m_movement.push_back(step);
     Log::info("Louver", "Full close movement");
@@ -185,7 +210,8 @@ void Louver::shortOpen(float timeSecs)
     if (timeSecs == -1)
         timeSecs = (float)inst.m_timeShortMovement / 1000;
     step.direction = DIR_UP;
-    step.timeMilli = Time::nowRelativeMilli() + (uint32_t)(timeSecs * 1000);
+    step.timeMilli = (uint32_t)(timeSecs * 1000);
+    step.checkConditions = false;
     inst.m_movement.clear();
     inst.m_movement.push_back(step);
     Log::info("Louver", "Short open movement, time %f seconds", timeSecs);
@@ -199,7 +225,8 @@ void Louver::shortClose(float timeSecs)
     if (timeSecs == -1)
         timeSecs = (float)inst.m_timeShortMovement / 1000;
     step.direction = DIR_DOWN;
-    step.timeMilli = Time::nowRelativeMilli() + (uint32_t)(timeSecs * 1000);
+    step.timeMilli = (uint32_t)(timeSecs * 1000);
+    step.checkConditions = false;
     inst.m_movement.clear();
     inst.m_movement.push_back(step);
     Log::info("Louver", "Short close movement, time %f seconds", timeSecs);
@@ -212,11 +239,13 @@ void Louver::fullCloseAndOpenLamellas()
     Louver& inst = getInstance();
     MovementStep step;
     step.direction = DIR_DOWN;
-    step.timeMilli = Time::nowRelativeMilli() + inst.m_timeDown;
+    step.timeMilli = inst.m_timeDown;
+    step.checkConditions = true;
     inst.m_movement.clear();
     inst.m_movement.push_back(step);
     step.direction = DIR_UP;
-    step.timeMilli += inst.m_timeOpenLamellas;
+    step.timeMilli = inst.m_timeOpenLamellas;
+    step.checkConditions = false;
     inst.m_movement.push_back(step);
     Log::info("Louver", "Full close and open lamellas movement");
     inst.startMovement();
@@ -344,10 +373,12 @@ void Louver::relaysIdle()
 
 void Louver::startMovement()
 {
+    m_movementStartTime = Time::nowRelativeMilli();
     m_keyUpReleased = false;
     m_keyDownReleased = false;
     m_state = ST_MOVEMENT;
     m_stepIndex = 0;
+    PowerMeas::resetAllConditions();
     Log::info("Louver", "Starting movement, number of steps = %d", m_movement.size());
 }
 
@@ -427,6 +458,8 @@ void Louver::process()
             break;
         case ST_MOVEMENT:
             {
+                bool upCond = PowerMeas::getConditionResult(0);
+                bool downCond = PowerMeas::getConditionResult(1);
                 if (!isKeyUpActive)
                 {
                     inst.m_keyUpReleased = true;
@@ -455,14 +488,33 @@ void Louver::process()
                     inst.delay(ST_WAIT_RELEASE);
                     break;
                 }
-                if (now >= inst.m_movement[index].timeMilli)
+                // Stop conditions check
+                bool stopFlag = false;
+                if (inst.m_stopUpOnPowerCond1 && inst.m_movement[index].checkConditions && (inst.m_movement[index].direction == DIR_UP) && upCond)
+                {
+                    stopFlag = true;
+                    Log::info("Louver", "Stop condition 1 satisfied, stopping movement");
+                }
+                if (inst.m_stopDownOnPowerCond2 && inst.m_movement[index].checkConditions && (inst.m_movement[index].direction == DIR_DOWN) && downCond)
+                {
+                    stopFlag = true;
+                    Log::info("Louver", "Stop condition 2 satisfied, stopping movement");
+                }
+                // Time check
+                if (stopFlag || (now >= inst.m_movementStartTime + inst.m_movement[index].timeMilli))
                 {
                     inst.m_stepIndex++;
+                    inst.m_movementStartTime = now;
+                    PowerMeas::resetAllConditions();
                     if (inst.m_stepIndex < inst.m_movement.size())
                     {
                         Log::info("Louver", "Next movement step, index = %d, direction %d", inst.m_stepIndex, inst.m_movement[inst.m_stepIndex].direction);
                     }
                     inst.delay(ST_MOVEMENT);
+                }
+                else if (inst.m_movement[index].checkConditions)
+                {
+
                 }
             }
             break;

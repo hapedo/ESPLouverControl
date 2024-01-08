@@ -1,0 +1,59 @@
+<!DOCTYPE HTML><html>
+<head>
+  <title>Louver control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="default.css">
+</head>
+<body>
+    <div class="header">
+        <h1>Louver control config</h1>
+        <p class="module_title-info">%MODULE_NAME%</p>
+    </div>
+    <div class="container">
+        <div class="card">
+            <p class="card_title-info">Movement Configuration</p>
+            <form class="card_form" action="/movementConfigSave" method="post" id="timeConfig">
+                <div class="input">
+                    <input type="text" class="input_field" required name="timeFullOpen" id = "timeFullOpen" value="%TIME_FULL_OPEN%"/>
+                    <label class="input_label" for="timeFullOpen">Full open [s]</label>
+                </div>
+                <div class="input">
+                    <input type="text" class="input_field" required name="timeFullClose" id = "timeFullClose" value="%TIME_FULL_CLOSE%"/>
+                    <label class="input_label" for="timeFullClose">Full close [s]</label>
+                </div>
+                <div class="input">
+                    <input type="text" class="input_field" required name="timeShort" id = "timeShort" value="%TIME_SHORT%"/>
+                    <label class="input_label" for="timeShort">Short movement [s]</label>
+                </div>
+                <div class="input">
+                    <input type="text" class="input_field" required name="timeOpenLamellas" id = "timeOpenLamellas" value="%TIME_OPEN_LAMELLAS%"/>
+                    <label class="input_label" for="timeOpenLamellas">Open lamellas [s]</label>
+                </div>
+                <div class="input">
+                    <select class="select_field" id="stopOpenOnPowerCond1" name="stopOpenOnPowerCond1">
+                        <option value="0" %SELECTED_OPEN_STOP_PWRCOND1_NO%>No</option>
+                        <option value="1" %SELECTED_OPEN_STOP_PWRCOND1_YES%>Yes</option>
+                    </select>
+                    <label class="input_select_label" for="stopOpenOnPowerCond1">Stop open movement on power condition 1</label>
+                </div>
+                <div class="input">
+                    <select class="select_field" id="stopCloseOnPowerCond2" name="stopCloseOnPowerCond2">
+                        <option value="0" %SELECTED_CLOSE_STOP_PWRCOND2_NO%>No</option>
+                        <option value="1" %SELECTED_CLOSE_STOP_PWRCOND2_YES%>Yes</option>
+                    </select>
+                    <label class="input_select_label" for="stopCloseOnPowerCond2">Stop close movement on power condition 2</label>
+                </div>
+                <button class="button" type="submit" form="timeConfig" value="Submit">Save</button>
+            </form>
+            <form action="/settings" id="back">
+                <button class="button" type="submit" form="back" value="Submit">Back to settings</button>                                       
+            </form>
+            <p class="card_title-info">
+                <div class="version">
+                 v%VERSION%
+                </div>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

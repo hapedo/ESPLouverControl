@@ -14,6 +14,20 @@
 #include "mdns.h"
 #include "module.h"
 #include "mqtt.h"
+#include "power_meas.h"
+
+static String htmlEscape(String str)
+{
+    String result;
+    for(size_t i = 0; i < str.length(); i++)
+    {
+        if (str.charAt(i) == '\"')
+            result = result + "&quot;";
+        else
+            result = result + str.charAt(i);
+    }
+    return result;
+}
 
 class CaptiveRequestHandler : public AsyncWebHandler
 {
@@ -135,6 +149,10 @@ void HttpServer::initPrivate()
         request->send_P(200, "text/html", getHttpSettings(), defaultProcessor);
         Log::debug("HTTP", "GET request, /settings");
     });
+    m_server.on("/moduleInfo", HTTP_GET, [](AsyncWebServerRequest *request){
+        request->send_P(200, "text/html", getHttpModuleInfo(), defaultProcessor);
+        Log::debug("HTTP", "GET request, /moduleInfo");
+    });
     m_server.on("/moduleConfig", HTTP_GET, [](AsyncWebServerRequest *request){
         request->send_P(200, "text/html", getHttpModuleConfig(), moduleConfigProcessor);
         Log::debug("HTTP", "GET request, /moduleConfig");
@@ -143,11 +161,17 @@ void HttpServer::initPrivate()
         Log::debug("HTTP", "POST request, /moduleConfigSave");
         String value;
         String name = Module::getName();
+        String logLevelOverride = Log::getLoggingLevelOverride();
         if (request->hasParam("name", true))
         {
             name = request->getParam("name", true)->value();
         }
+        if (request->hasParam("logLevelOverride", true))
+        {
+            logLevelOverride = request->getParam("logLevelOverride", true)->value();
+        }
         Module::setName(name.c_str());
+        Log::setLoggingLevelOverride(logLevelOverride);
         request->send_P(200, "text/html", getHttpConfigSaved(), defaultProcessor);
     });
     m_server.on("/gpioConfig", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -254,18 +278,21 @@ void HttpServer::initPrivate()
         Module::setResetGpioConfig(pinKeyReset, highKeyReset, keyResetPullEnabled);
         request->send_P(200, "text/html", getHttpConfigSaved(), defaultProcessor);
     });
-    m_server.on("/timingConfig", HTTP_GET, [](AsyncWebServerRequest *request){
-        request->send_P(200, "text/html", getHttpTimingConfig(), timingConfigProcessor);
-        Log::debug("HTTP", "GET request, /timingConfig");
+    m_server.on("/movementConfig", HTTP_GET, [](AsyncWebServerRequest *request){
+        request->send_P(200, "text/html", getHttpMovementConfig(), movementConfigProcessor);
+        Log::debug("HTTP", "GET request, /movementConfig");
     });
-    m_server.on("/timingConfigSave", HTTP_POST, [](AsyncWebServerRequest *request){
-        Log::debug("HTTP", "POST request, /timingConfigSave");
+    m_server.on("/movementConfigSave", HTTP_POST, [](AsyncWebServerRequest *request){
+        Log::debug("HTTP", "POST request, /movementConfigSave");
         String value;
         float timeFullOpenSecs;
         float timeFullCloseSecs;
         float timeOpenLamellasSecs;
         float shortMovementSecs;
         Louver::getTimesConfig(timeFullOpenSecs, timeFullCloseSecs, timeOpenLamellasSecs, shortMovementSecs);
+        bool stopCond1;
+        bool stopCond2;
+        Louver::getPowerCondStop(stopCond1, stopCond2);
         if (request->hasParam("timeFullOpen", true))
         {
             timeFullOpenSecs = request->getParam("timeFullOpen", true)->value().toFloat();
@@ -282,7 +309,22 @@ void HttpServer::initPrivate()
         {
             timeOpenLamellasSecs = request->getParam("timeOpenLamellas", true)->value().toFloat();
         }
+        if (request->hasParam("stopOpenOnPowerCond1", true))
+        {
+            if (request->getParam("stopOpenOnPowerCond1", true)->value() == "1")
+                stopCond1 = true;
+            else
+                stopCond1 = false;
+        }
+        if (request->hasParam("stopCloseOnPowerCond2", true))
+        {
+            if (request->getParam("stopCloseOnPowerCond2", true)->value() == "1")
+                stopCond2 = true;
+            else
+                stopCond2 = false;
+        }
         Louver::configureTimes(timeFullOpenSecs, timeFullCloseSecs, timeOpenLamellasSecs, shortMovementSecs);
+        Louver::configurePowerCondStop(stopCond1, stopCond2);
         request->send_P(200, "text/html", getHttpConfigSaved(), defaultProcessor);
     });
     m_server.on("/networkConfig", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -302,6 +344,7 @@ void HttpServer::initPrivate()
         wifiConfig = oldWifiConfig;
         String mdnsHost = Mdns::getHost();
         WifiClientBehavior clientBehavior = getInstance().m_wifiClientBehavior;
+        bool telnetLoggingEnabled = Log::getTelnetLoggingEnabled();
         if (request->hasParam("wifiMode", true)) 
         {
             value = request->getParam("wifiMode", true)->value();
@@ -337,12 +380,17 @@ void HttpServer::initPrivate()
             else
                 clientBehavior = WIFI_CLIENT_BEH_1MCLIENT_5MAP;
         }
+        if (request->hasParam("telnetLoggingEnabled", true))
+        {
+            telnetLoggingEnabled = request->getParam("telnetLoggingEnabled", true)->value() == "1";
+        }
         Module::reboot();
         configureAP(ssidAp.c_str(), passAp.c_str());
         configureClient(ssid.c_str(), pass.c_str());
         setWifiConfig(wifiConfig);
         setWifiClientBehavior(clientBehavior);
         Mdns::configure(mdnsHost);
+        Log::setTelnetLoggingEnabled(telnetLoggingEnabled);
         Log::info("HTTP", "Network config changed - requesting reboot");    
         request->send_P(200, "text/html", getHttpNetworkConfigSaved(), defaultProcessor);
     });
@@ -382,6 +430,39 @@ void HttpServer::initPrivate()
         Mqtt::setClientId(clientId.c_str());
         request->send_P(200, "text/html", getHttpConfigSaved(), defaultProcessor);
     });
+    m_server.on("/powerMeasConfig", HTTP_GET, [](AsyncWebServerRequest *request){
+        request->send_P(200, "text/html", getHttpPowerMeasConfig(), powerMeasConfigProcessor);
+        Log::debug("HTTP", "GET request, /powerMeasConfig");
+    });
+    m_server.on("/powerMeasConfigSave", HTTP_POST, [](AsyncWebServerRequest *request){
+        Log::debug("HTTP", "POST request, /powerMeasConfigSave");
+        String value;
+        PowerMeas::DeviceType deviceType = PowerMeas::getActiveDeviceType();
+        String bl0939Config = PowerMeas::getConfiguration(PowerMeas::DEV_BL0939);
+        String stopCond1 = PowerMeas::getConditionConfig(0);
+        String stopCond2 = PowerMeas::getConditionConfig(1);
+        if (request->hasParam("deviceType", true))
+        {
+            deviceType = (PowerMeas::DeviceType)request->getParam("deviceType", true)->value().toInt();
+        }
+        if (request->hasParam("bl0939Config", true))
+        {
+            bl0939Config = request->getParam("bl0939Config", true)->value();
+        }
+        if (request->hasParam("powerMeasStopCond1", true))
+        {
+            stopCond1 = request->getParam("powerMeasStopCond1", true)->value();
+        }
+        if (request->hasParam("powerMeasStopCond2", true))
+        {
+            stopCond2 = request->getParam("powerMeasStopCond2", true)->value();
+        }
+        PowerMeas::setActiveDeviceType(deviceType);
+        PowerMeas::setConfiguration(PowerMeas::DEV_BL0939, bl0939Config);
+        PowerMeas::setConditionConfig(0, stopCond1);
+        PowerMeas::setConditionConfig(1, stopCond2);
+        request->send_P(200, "text/html", getHttpConfigSaved(), defaultProcessor);
+    });
     m_server.on("/portal", HTTP_GET, [](AsyncWebServerRequest *request){
         request->send_P(200, "text/html", getHttpIndex(), defaultProcessor);
         Log::debug("HTTP", "GET request, /portal");
@@ -411,6 +492,10 @@ void HttpServer::initPrivate()
             Log::error("HTTP", "Command received but no button info provided");
         }
         request->send(200, "text/plain", "OK");
+    });
+    m_server.on("/powerMeasurementExport", HTTP_GET, [](AsyncWebServerRequest *request){
+        request->send(200, "text/json", PowerMeas::exportActiveDescriptorsToJSON());
+        Log::debug("HTTP", "GET request, /powerMeasurementExport");
     });
     m_server.onNotFound([&](AsyncWebServerRequest *request){
         Log::debug("HTTP", "GET request, not found, redirecting");
@@ -459,7 +544,7 @@ void HttpServer::loadConfigPrivate()
 String HttpServer::defaultProcessor(const String& var)
 {
     if (var == "MODULE_NAME")
-        return Module::getName();
+        return htmlEscape(Module::getName());
     else if (var == "VERSION")
         return String(Config::VERSION);
     return String();
@@ -467,8 +552,8 @@ String HttpServer::defaultProcessor(const String& var)
 
 String HttpServer::moduleConfigProcessor(const String& var)
 {
-    if (var == "MODULE_NAME")
-        return Module::getName();
+    if (var == "MODULE_LOG_LEVEL_OVERRIDE")
+        return htmlEscape(Log::getLoggingLevelOverride());
     return defaultProcessor(var);
 }
 
@@ -535,13 +620,16 @@ String HttpServer::gpioConfigProcessor(const String& var)
     return defaultProcessor(var);
 }
 
-String HttpServer::timingConfigProcessor(const String& var)
+String HttpServer::movementConfigProcessor(const String& var)
 {
     float timeFullOpenSecs;
     float timeFullCloseSecs;
     float timeOpenLamellasSecs;
     float shortMovementSecs;
     Louver::getTimesConfig(timeFullOpenSecs, timeFullCloseSecs, timeOpenLamellasSecs, shortMovementSecs);
+    bool upCond;
+    bool downCond;
+    Louver::getPowerCondStop(upCond, downCond);
     if (var == "TIME_FULL_OPEN")
         return String(timeFullOpenSecs);
     if (var == "TIME_FULL_CLOSE")
@@ -550,6 +638,14 @@ String HttpServer::timingConfigProcessor(const String& var)
         return String(timeOpenLamellasSecs);
     if (var == "TIME_SHORT")
         return String(shortMovementSecs);
+    if ((var == "SELECTED_OPEN_STOP_PWRCOND1_NO") && (!upCond))
+        return "selected";
+    if ((var == "SELECTED_OPEN_STOP_PWRCOND1_YES") && (upCond))
+        return "selected";
+    if ((var == "SELECTED_CLOSE_STOP_PWRCOND2_NO") && (!downCond))
+        return "selected";
+    if ((var == "SELECTED_CLOSE_STOP_PWRCOND2_YES") && (downCond))
+        return "selected";
     return defaultProcessor(var);
 }
 
@@ -560,18 +656,22 @@ String HttpServer::networkConfigProcessor(const String& var)
     if ((var == "SELECTED_WIFI_MODE_CLIENT") && (getInstance().m_wifiConfig == WIFI_CONF_CLIENT))
         return "selected";
     if (var == "NETWORK_SSID_AP")
-        return getInstance().m_wifiSsidAp;
+        return htmlEscape(getInstance().m_wifiSsidAp);
     if (var == "NETWORK_PASS_AP")
-        return getInstance().m_wifiPasswordAp;
+        return htmlEscape(getInstance().m_wifiPasswordAp);
     if (var == "NETWORK_SSID")
-        return getInstance().m_wifiSsid;
+        return htmlEscape(getInstance().m_wifiSsid);
     if (var == "NETWORK_PASS")
-        return getInstance().m_wifiPassword;
+        return htmlEscape(getInstance().m_wifiPassword);
     if (var == "NETWORK_MDNS_HOST")
         return Mdns::getHost();
     if ((var == "SELECTED_CLIENT_BEHAVIOR_0") && (getInstance().m_wifiClientBehavior == WIFI_CLIENT_BEH_1MCLIENT_5MAP))
         return "selected";
     if ((var == "SELECTED_CLIENT_BEHAVIOR_1") && (getInstance().m_wifiClientBehavior == WIFI_CLIENT_BEH_STILL_CLIENT))
+        return "selected";
+    if ((var == "SELECTED_TELNET_LOG_NO") && (!Log::getTelnetLoggingEnabled()))
+        return "selected";
+    if ((var == "SELECTED_TELNET_LOG_YES") && (Log::getTelnetLoggingEnabled()))
         return "selected";
     return defaultProcessor(var);
 }
@@ -583,11 +683,26 @@ String HttpServer::mqttConfigProcessor(const String& var)
     if ((var == "MQTT_ENABLED_YES") && (Mqtt::getEnabled()))
         return "selected";
     if (var == "MQTT_CLIENT_ID")
-        return Mqtt::getClientId();
+        return htmlEscape(Mqtt::getClientId());
     if (var == "MQTT_BROKER_IP")
         return Mqtt::getBrokerIp();
     if (var == "MQTT_BROKER_PORT")
         return String(Mqtt::getBrokerPort());
+    return defaultProcessor(var);
+}
+
+String HttpServer::powerMeasConfigProcessor(const String& var)
+{
+    if ((var == "POWER_MEAS_DRIVER_0") && (PowerMeas::getActiveDeviceType() == PowerMeas::DEV_NONE))
+        return "selected";
+    if ((var == "POWER_MEAS_DRIVER_1") && (PowerMeas::getActiveDeviceType() == PowerMeas::DEV_BL0939))
+        return "selected";
+    if (var == "POWER_MEAS_BL0939_CONFIG")
+        return htmlEscape(String(PowerMeas::getConfiguration(PowerMeas::DEV_BL0939)));
+    if (var == "POWER_MEAS_STOP_COND_1")
+        return htmlEscape(String(PowerMeas::getConditionConfig(0)));
+    if (var == "POWER_MEAS_STOP_COND_2")
+        return htmlEscape(String(PowerMeas::getConditionConfig(1)));
     return defaultProcessor(var);
 }
 

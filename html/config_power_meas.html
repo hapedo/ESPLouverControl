@@ -1,0 +1,48 @@
+<!DOCTYPE HTML><html>
+<head>
+  <title>Louver control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="default.css">
+</head>
+<body>
+    <div class="header">
+        <h1>Louver control config</h1>
+        <p class="module_title-info">%MODULE_NAME%</p>
+    </div>
+    <div class="container">
+        <div class="card">
+            <p class="card_title-info">Power Measurement Configuration</p>
+            <form class="card_form" action="/powerMeasConfigSave" method="post" id="powerMeasConfig">
+                <div class="input">
+                    <select class="select_field" id="deviceType" name="deviceType">
+                        <option value="0" %POWER_MEAS_DRIVER_0%>Disabled</option>
+                        <option value="1" %POWER_MEAS_DRIVER_1%>BL0939</option>
+                    </select>
+                    <label class="input_select_label" for="deviceType">Power measurement driver</label>
+                </div>
+                <div class="input">
+                    <input type="text" class="input_field" name="powerMeasStopCond1" id = "powerMeasStopCond1" value="%POWER_MEAS_STOP_COND_1%"/>
+                    <label class="input_label" for="powerMeasStopCond1">Stop condition 1</label>
+                </div>
+                <div class="input">
+                    <input type="text" class="input_field" name="powerMeasStopCond2" id = "powerMeasStopCond2" value="%POWER_MEAS_STOP_COND_2%"/>
+                    <label class="input_label" for="powerMeasStopCond2">Stop condition 2</label>
+                </div>
+                <div class="input">
+                    <input type="text" class="input_field" name="bl0939Config" id = "bl0939Config" value="%POWER_MEAS_BL0939_CONFIG%"/>
+                    <label class="input_label" for="bl0939Config">BL0939 configuration</label>
+                </div>
+                <button class="button" type="submit" form="powerMeasConfig" value="Submit">Save</button>
+            </form>
+            <form action="/settings" id="back">
+                <button class="button" type="submit" form="back" value="Submit">Back to settings</button>                                       
+            </form>
+            <p class="card_title-info">
+                <div class="version">
+                 v%VERSION%
+                </div>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

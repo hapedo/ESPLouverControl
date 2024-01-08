@@ -37,11 +37,22 @@
                     <label class="input_label" for="clientPass">Client password</label>
                 </div>
                 <div class="input">
+                    <input type="text" class="input_field" required name="mDNSHost" id = "mDNSHost" value="%NETWORK_MDNS_HOST%"/>
+                    <label class="input_label" for="mDNSHost">mDNS hostname:</label>
+                </div>
+                <div class="input">
                     <select class="select_field" id="clientBehavior" name="clientBehavior">
                         <option value="0" %SELECTED_CLIENT_BEHAVIOR_0%>1m in client, 5mins in AP</option>
                         <option value="1" %SELECTED_CLIENT_BEHAVIOR_1%>Permanent client</option>
                     </select>
                     <label class="input_select_label" for="clientBehavior">Client behavior when cannot connect</label>
+                </div>
+                <div class="input">
+                    <select class="select_field" id="telnetLoggingEnabled" name="telnetLoggingEnabled">
+                        <option value="0" %SELECTED_TELNET_LOG_NO%>No</option>
+                        <option value="1" %SELECTED_TELNET_LOG_YES%>Yes</option>
+                    </select>
+                    <label class="input_select_label" for="telnetLoggingEnabled">Telnet logging enabled</label>
                 </div>
                 <button class="button" type="submit" form="networkConfig" value="Submit">Save</button>
             </form>

@@ -4,15 +4,19 @@ const char* getHttpDefaultCss();
 
 const char* getHttpIndex();
 
+const char* getHttpModuleInfo();
+
 const char* getHttpModuleConfig();
 
 const char* getHttpGpioConfig();
 
-const char* getHttpTimingConfig();
+const char* getHttpMovementConfig();
 
 const char* getHttpNetworkConfig();
 
 const char* getHttpMqttConfig();
+
+const char* getHttpPowerMeasConfig();
 
 const char* getHttpSettings();
 

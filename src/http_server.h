@@ -70,11 +70,13 @@ private:
 
     static String gpioConfigProcessor(const String& var);
 
-    static String timingConfigProcessor(const String& var);
+    static String movementConfigProcessor(const String& var);
 
     static String networkConfigProcessor(const String& var);
 
     static String mqttConfigProcessor(const String& var);
+
+    static String powerMeasConfigProcessor(const String& var);
 
     WifiConfig m_wifiConfig;
     WifiClientBehavior m_wifiClientBehavior;

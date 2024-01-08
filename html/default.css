@@ -209,3 +209,18 @@ button:hover {
   right: 20px;
   z-index: 3;
 }
+
+table {
+    width: 100%;
+}
+
+td.col1 {
+    width: 50%;
+    text-align: left;
+    font-weight: bold;
+}
+
+td.col2 {
+    width: 50%;
+    text-align: left;
+}

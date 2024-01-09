@@ -49,7 +49,9 @@ String values:
 
 ## Documentation  
 [How to build](doc/build.md)
+
 [Module info](doc/module_info.md)
+
 [Module config](doc/module_config.md)
 
 ## Important notes

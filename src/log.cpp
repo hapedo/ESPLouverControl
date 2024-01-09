@@ -39,7 +39,7 @@ String Log::getLoggingLevelOverride()
 {
     Log& inst = getInstance();
     String result = "{";
-    result = result + "\";*\":" + String(inst.m_logLevel);
+    result = result + "\"*\":" + String(inst.m_logLevel);
     if (inst.m_levelOverride.size())
         result = result + ",";
     for(size_t i = 0; i < inst.m_levelOverride.size(); i++)

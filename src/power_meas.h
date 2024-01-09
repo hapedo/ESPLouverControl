@@ -10,7 +10,8 @@ public:
     enum DeviceType
     {
         DEV_NONE = 0,
-        DEV_BL0939
+        DEV_BL0939,
+        DEV_ADE7953
     };
 
     enum Comparator

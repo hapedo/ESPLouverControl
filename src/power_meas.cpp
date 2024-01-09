@@ -1,6 +1,7 @@
 #include "power_meas.h"
 #include <ArduinoJson.h>
 #include "bl0939.h"
+#include "ade7953.h"
 #include "time.h"
 #include "log.h"
 #include "config.h"
@@ -12,6 +13,8 @@ PowerMeas::PowerMeas() :
     m_devices.push_back(device);
     BL0939* bl0939 = new BL0939;
     m_devices.push_back(bl0939); 
+    ADE7953* ade7953 = new ADE7953;
+    m_devices.push_back(ade7953); 
 
     // Stop conditions defaults
     for(size_t i = 0; i < STOP_CONDITION_COUNT; i++)
@@ -240,6 +243,7 @@ bool PowerMeas::compare(float value1, float value2, Comparator cmp)
         case CMP_NOT_EQUAL:
             return value1 != value2;
     }
+    return false;
 }
 
 String PowerMeas::comparatorToString(Comparator cmp)
@@ -259,6 +263,7 @@ String PowerMeas::comparatorToString(Comparator cmp)
         case CMP_NOT_EQUAL:
             return "!="; 
     }
+    return "==";
 }
 
 PowerMeas::Comparator PowerMeas::stringToComparator(String cmp)

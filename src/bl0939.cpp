@@ -71,14 +71,19 @@ void BL0939::init()
         m_serial = &Serial;
     else if (m_serialIndex == 1)
         m_serial = &Serial1;
+#ifdef ESP32
     else if (m_serialIndex == 2)
         m_serial = &Serial2;
-    m_serial = &Serial2;
+#endif
     m_packetIndex = 0;
     m_lastReadTimestamp = 0;
     if (m_serial)
     {
+#ifdef ESP32
         m_serial->begin(4800, SERIAL_8N1, m_rxGpio, m_txGpio);
+#else
+        m_serial->begin(4800, SERIAL_8N1);
+#endif
         for(uint8_t i = 0; i < 6; i++)
         {
             for (uint8_t ii = 0; ii < 6; ii++)

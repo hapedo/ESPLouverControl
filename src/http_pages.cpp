@@ -720,6 +720,7 @@ const char* httpPowerMeasConfig PROGMEM = R"rawliteral(
                     <select class="select_field" id="deviceType" name="deviceType">
                         <option value="0" %POWER_MEAS_DRIVER_0%>Disabled</option>
                         <option value="1" %POWER_MEAS_DRIVER_1%>BL0939</option>
+                        <option value="2" %POWER_MEAS_DRIVER_2%>ADE7953 I2C</option>
                     </select>
                     <label class="input_select_label" for="deviceType">Power measurement driver</label>
                 </div>
@@ -734,6 +735,10 @@ const char* httpPowerMeasConfig PROGMEM = R"rawliteral(
                 <div class="input">
                     <input type="text" class="input_field" name="bl0939Config" id = "bl0939Config" value="%POWER_MEAS_BL0939_CONFIG%"/>
                     <label class="input_label" for="bl0939Config">BL0939 configuration</label>
+                </div>
+                <div class="input">
+                    <input type="text" class="input_field" name="ade7953Config" id = "ade7953Config" value="%POWER_MEAS_ADE7953_CONFIG%"/>
+                    <label class="input_label" for="ade7953Config">ADE7953 configuration</label>
                 </div>
                 <button class="button" type="submit" form="powerMeasConfig" value="Submit">Save</button>
             </form>

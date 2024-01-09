@@ -118,7 +118,7 @@ void Module::process()
         inst.m_lastKeyResetChangeTime = now;
         Log::debug("Module", "Reset key state changed, active=%d", isKeyResetActive);
     }
-    if ((isKeyResetActive) && (now >= inst.m_lastKeyResetChangeTime + RESET_HOLD_TIME_MILLI))
+    if ((isKeyResetActive) && !inst.m_reboot && (now >= inst.m_lastKeyResetChangeTime + RESET_HOLD_TIME_MILLI))
     {
         Log::info("Module", "Reset hold detected, clearing configuration and rebooting...");
         Config::clearAll();

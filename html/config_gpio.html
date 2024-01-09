@@ -80,14 +80,14 @@
                         <option value="0" %SELECTED_KEY_RESET_INVERTED_NO%>Active high</option>
                         <option value="1" %SELECTED_KEY_RESET_INVERTED_YES%>Active low</option>
                     </select>
-                    <label class="input_select_label" for="resetInvert">Reset key GPIO active level</label>
+                    <label class="input_select_label" for="resetInvert">Key reset GPIO active level</label>
                 </div>
                 <div class="input">
                     <select class="select_field" id="resetPull" name="resetPull">
                         <option value="0" %SELECTED_KEY_RESET_PULL_NO%>Disabled</option>
                         <option value="1" %SELECTED_KEY_RESET_PULL_YES%>Enabled</option>
                     </select>
-                    <label class="input_select_label" for="resetPull">Key down GPIO pull resistor</label>
+                    <label class="input_select_label" for="resetPull">Key reset GPIO pull resistor</label>
                 </div>
                 <button class="button" type="submit" form="gpioConfig" value="Submit">Save</button>
             </form>

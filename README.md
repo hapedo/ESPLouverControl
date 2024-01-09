@@ -54,6 +54,8 @@ String values:
 
 [Module config](doc/module_config.md)
 
+[Movement config](doc/movement_config.md)
+
 ## Important notes
 This project is under heavy development and it's still not finished.
 

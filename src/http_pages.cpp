@@ -493,14 +493,14 @@ const char* httpGpioConfig PROGMEM = R"rawliteral(
                         <option value="0" %SELECTED_KEY_RESET_INVERTED_NO%>Active high</option>
                         <option value="1" %SELECTED_KEY_RESET_INVERTED_YES%>Active low</option>
                     </select>
-                    <label class="input_select_label" for="resetInvert">Reset key GPIO active level</label>
+                    <label class="input_select_label" for="resetInvert">Key reset GPIO active level</label>
                 </div>
                 <div class="input">
                     <select class="select_field" id="resetPull" name="resetPull">
                         <option value="0" %SELECTED_KEY_RESET_PULL_NO%>Disabled</option>
                         <option value="1" %SELECTED_KEY_RESET_PULL_YES%>Enabled</option>
                     </select>
-                    <label class="input_select_label" for="resetPull">Key down GPIO pull resistor</label>
+                    <label class="input_select_label" for="resetPull">Key reset GPIO pull resistor</label>
                 </div>
                 <button class="button" type="submit" form="gpioConfig" value="Submit">Save</button>
             </form>
@@ -592,7 +592,7 @@ const char* httpNetworkConfig PROGMEM = R"rawliteral(
     </div>
     <div class="container">
         <div class="card">
-            <p class="card_title-info">MQTT Configuration</p>
+            <p class="card_title-info">Network Configuration</p>
             <form class="card_form" action="/networkConfigSave" method="post" id="networkConfig">
                 <div class="input">
                     <select class="select_field" id="wifiMode" name="wifiMode">
@@ -720,7 +720,7 @@ const char* httpPowerMeasConfig PROGMEM = R"rawliteral(
                     <select class="select_field" id="deviceType" name="deviceType">
                         <option value="0" %POWER_MEAS_DRIVER_0%>Disabled</option>
                         <option value="1" %POWER_MEAS_DRIVER_1%>BL0939</option>
-                        <option value="2" %POWER_MEAS_DRIVER_2%>ADE7953 I2C</option>
+                        <option value="2" %POWER_MEAS_DRIVER_2%>ADE7953</option>
                     </select>
                     <label class="input_select_label" for="deviceType">Power measurement driver</label>
                 </div>

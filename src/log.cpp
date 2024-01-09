@@ -74,6 +74,8 @@ void Log::setLoggingLevelOverridePrivate(String config, bool save)
             {
                 strcpy(over.module, elem.key().c_str());
                 over.maximalLevel = (Level)elem.value().as<int>();
+                if (over.maximalLevel > VERBOSE)
+                    over.maximalLevel = VERBOSE;
                 if (strcmp(over.module, "*") == 0)
                 {
                     m_logLevel = over.maximalLevel;

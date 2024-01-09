@@ -381,7 +381,7 @@ bool ADE7953::read32(uint16_t reg, uint32_t& value)
 
 void ADE7953::process()
 {
-    if (m_i2c)
+    if ((m_i2c) || (m_serial))
     {
         uint64_t now = Time::nowRelativeMilli();
         if (now >= m_lastReadTimestamp + m_refreshPeriod)

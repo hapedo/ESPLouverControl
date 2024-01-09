@@ -1,7 +1,7 @@
 # Module config
 Module config page provides basic module configuration.
 
-![Module info](module_config.png)
+![Module config](module_config.png)
 
 ## Module name
 Module name is friendly module name shown at the top of web interface

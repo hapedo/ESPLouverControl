@@ -56,6 +56,12 @@ String values:
 
 [Movement config](doc/movement_config.md)
 
+[GPIO config](doc/gpio_config.md)
+
+[Network config](doc/network_config.md)
+
+[MQTT config](doc/mqtt_config.md)
+
 ## Important notes
 This project is under heavy development and it's still not finished.
 

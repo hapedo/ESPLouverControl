@@ -20,4 +20,4 @@ Following libraries were used:
 You have to change include in ElegantOTA.h header:
     #include "ESPAsyncWebServer.h" -> #include "ESPAsyncWebSrv.h"
 
-[Main page](../readme.md)
+[Main page](../README.md)

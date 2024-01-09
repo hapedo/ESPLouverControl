@@ -46,23 +46,11 @@ String values:
  - open - full open movement
  - close - full close movement
  - close_open_lamellas - full close and open lamellas movement
-  
-## Dependencies
- - ESPAsyncWebSrv
- - FS
- - WiFi
- - AsyncTCP
- - AsyncElegantOTA
- - DNSServer
- - ArduinoJson
- - EEPROM
- - StreamUtils
- - ESPmDNS
- - ESPDateTime
- - PubSubClient
 
-## How to build
+## Documentation  
 [How to build](doc/build.md)
+[Module info](doc/module_info.md)
+[Module config](doc/module_config.md)
 
 ## Important notes
 This project is under heavy development and it's still not finished.

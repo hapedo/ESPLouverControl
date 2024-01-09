@@ -62,7 +62,7 @@ String values:
  - PubSubClient
 
 ## How to build
-This project can be build using Arduino IDE with installed dependencies (listed above).
+[How to build](doc/build.md)
 
 ## Important notes
 This project is under heavy development and it's still not finished.

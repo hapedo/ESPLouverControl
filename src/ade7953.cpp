@@ -37,6 +37,7 @@ ADE7953::ADE7953(Mode mode) :
     m_peripheralIndex(0),
     m_pin0Index(PROFILE_DEFAULT_ADE7953_PIN0_GPIO),
     m_pin1Index(PROFILE_DEFAULT_ADE7953_PIN1_GPIO),
+    m_pinResetIndex(PROFILE_DEFAULT_ADE7953_RESET_GPIO),
     m_refreshPeriod(PROFILE_DEFAULT_ADE7953_PERIOD_MILLI),
     m_i2c(nullptr),
     m_serial(nullptr),
@@ -59,12 +60,17 @@ ADE7953::ADE7953(Mode mode) :
 void ADE7953::init()
 {
     m_i2c = nullptr;
+    m_serial = nullptr;
     bool ok = false;
     m_mode = (Mode)Config::getInt("ade7953/mode", (Mode)PROFILE_DEFAULT_ADE7953_MODE);
     m_peripheralIndex = Config::getInt("ade7953/peripheral", PROFILE_DEFAULT_ADE7953_PERIPHERAL);
     m_pin0Index = Config::getInt("ade7953/pin0_gpio", PROFILE_DEFAULT_ADE7953_PIN0_GPIO);
     m_pin1Index = Config::getInt("ade7953/pin1_gpio", PROFILE_DEFAULT_ADE7953_PIN1_GPIO);
+    m_pinResetIndex = Config::getInt("ade7953/reset_gpio", PROFILE_DEFAULT_ADE7953_RESET_GPIO);
     m_refreshPeriod = Config::getInt("ade7953/refresh_milli", PROFILE_DEFAULT_ADE7953_PERIOD_MILLI);
+
+    pinMode(m_pinResetIndex, OUTPUT);
+    digitalWrite(m_pinResetIndex, 1);
 
     if (m_mode == M_UART)
     {
@@ -76,16 +82,17 @@ void ADE7953::init()
         else if (m_peripheralIndex == 2)
             m_serial = &Serial2;
 #endif
-    }
-    if (m_serial)
-    {
+        if (m_serial)
+        {
 #ifdef ESP32
-        m_serial->begin(4800, SERIAL_8N1, m_pin0Index, m_pin1Index);
+            m_serial->begin(4800, SERIAL_8N1, m_pin0Index, m_pin1Index);
 #else
-        m_serial->begin(4800, SERIAL_8N1);
+            m_serial->begin(4800, SERIAL_8N1);
 #endif
-        m_serial->flush();
-        Log::info("ADE7953", "Initialized, serial=%d, rx=%d, tx=%d, refresh period=%d ms", m_peripheralIndex, m_pin0Index, m_pin1Index, m_refreshPeriod);
+            m_serial->flush();
+            ok = true;
+            Log::info("ADE7953", "Initialized, serial=%d, rx=%d, tx=%d, reset=%d, refresh period=%d ms", m_peripheralIndex, m_pin0Index, m_pin1Index, m_pinResetIndex, m_refreshPeriod);
+        }
     }
     else if (m_mode == M_I2C)
     {
@@ -109,6 +116,13 @@ void ADE7953::init()
         // this->ade_write_8(0x0010, 0x04);
         write8(0x00FE, 0xAD);
         write16(0x0120, 0x0030);
+        uint32_t val32;
+        if (!read32(AWGAIN_32, val32))
+        {
+            Log::error("ADE7953", "Unable to read register - power measurement disabled");
+            m_serial = nullptr;
+            m_i2c = nullptr;
+        }
         // Set gains
 /*        write8(PGA_V_8, pga_v_);
         write8(PGA_IA_8, pga_ia_);
@@ -146,6 +160,7 @@ String ADE7953::getConfiguration()
         result = result + "\"serial\":" + String(m_peripheralIndex) + ",";
         result = result + "\"rx_gpio\":" + String(m_pin0Index) + ",";
         result = result + "\"tx_gpio\":" + String(m_pin1Index) + ",";
+        result = result + "\"reset_gpio\":" + String(m_pinResetIndex) + ",";
         result = result + "\"refresh_period_milli\":" + String(m_refreshPeriod);
     }
     else if (m_mode == M_I2C)
@@ -154,6 +169,7 @@ String ADE7953::getConfiguration()
         result = result + "\"i2c\":" + String(m_peripheralIndex) + ",";
         result = result + "\"sda_gpio\":" + String(m_pin0Index) + ",";
         result = result + "\"scl_gpio\":" + String(m_pin1Index) + ",";
+        result = result + "\"reset_gpio\":" + String(m_pinResetIndex) + ",";
         result = result + "\"refresh_period_milli\":" + String(m_refreshPeriod);
     }
     result = result + "}";
@@ -174,6 +190,8 @@ void ADE7953::setConfiguration(String config, bool save)
             m_mode = M_UART;
         if (json.containsKey("mode") && (json["mode"] == "i2c"))
             m_mode = M_I2C;
+        if (json.containsKey("reset_gpio"))
+            m_pinResetIndex = json["reset_gpio"].as<uint8_t>();
         if (m_mode == M_UART)
         {
             if (json.containsKey("serial"))
@@ -210,6 +228,7 @@ void ADE7953::setConfiguration(String config, bool save)
             Config::setInt("ade7953/peripheral", m_peripheralIndex);
             Config::setInt("ade7953/pin0_gpio", m_pin0Index);
             Config::setInt("ade7953/pin1_gpio", m_pin1Index);
+            Config::setInt("ade7953/reset_gpio", m_pinResetIndex);
             Config::setInt("ade7953/refresh_milli", m_refreshPeriod);
             Config::flush();
             Log::info("ADE7953", "Configuration saved");
@@ -320,14 +339,16 @@ bool ADE7953::read16(uint16_t reg, uint16_t& value)
         m_i2c->beginTransmission(ADE_ADDRESS);
         m_i2c->write(reg >> 8);
         m_i2c->write(reg & 0xff);
-        m_i2c->endTransmission();
-        m_i2c->requestFrom(ADE_ADDRESS, (uint8_t)1);
-        value = 0;
-        if(m_i2c->available() >= 1)
+        if (m_i2c->endTransmission() == 0)
         {
-            value |= (uint16_t)m_i2c->read() << 8;
-            value |= m_i2c->read();
-            return true;
+            m_i2c->requestFrom(ADE_ADDRESS, (uint8_t)1);
+            value = 0;
+            if(m_i2c->available() >= 1)
+            {
+                value |= (uint16_t)m_i2c->read() << 8;
+                value |= m_i2c->read();
+                return true;
+            }
         }
     }
     Log::error("ADE7953", "Error reading 16 bit register %x", reg);
@@ -363,16 +384,18 @@ bool ADE7953::read32(uint16_t reg, uint32_t& value)
         m_i2c->beginTransmission(ADE_ADDRESS);
         m_i2c->write(reg >> 8);
         m_i2c->write(reg & 0xff);
-        m_i2c->endTransmission();
-        m_i2c->requestFrom(ADE_ADDRESS, (uint8_t)4);
-        value = 0;
-        if(m_i2c->available() >= 4)
+        if (m_i2c->endTransmission() == 0)
         {
-            value |= (uint32_t)m_i2c->read() << 24;
-            value |= (uint32_t)m_i2c->read() << 16;
-            value |= (uint32_t)m_i2c->read() << 8;
-            value |= (uint32_t)m_i2c->read();
-            return true;
+            m_i2c->requestFrom(ADE_ADDRESS, (uint8_t)4);
+            value = 0;
+            if(m_i2c->available() >= 4)
+            {
+                value |= (uint32_t)m_i2c->read() << 24;
+                value |= (uint32_t)m_i2c->read() << 16;
+                value |= (uint32_t)m_i2c->read() << 8;
+                value |= (uint32_t)m_i2c->read();
+                return true;
+            }
         }
     }
     Log::error("ADE7953", "Error reading 32 bit register %x", reg);
@@ -412,7 +435,7 @@ void ADE7953::process()
                 setLastValue(9, (float)val32 / 100000.0f);
             if (read32(0x031C, val32))
                 setLastValue(10, (float)val32 / 26000.0f);
-            if (read32(0x031C, val32))
+            if (read32(0x010E, val32))
                 setLastValue(11, 223750.0f / (1 + (float)val32));
         }
     }

@@ -36,6 +36,7 @@ private:
     uint8_t m_peripheralIndex;
     uint8_t m_pin0Index;
     uint8_t m_pin1Index;
+    uint8_t m_pinResetIndex;
     uint32_t m_refreshPeriod;
     TwoWire* m_i2c;
     HardwareSerial* m_serial;

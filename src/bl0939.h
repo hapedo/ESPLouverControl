@@ -12,7 +12,7 @@ public:
 
     String getConfiguration() override;
 
-    void setConfiguration(String config, bool save = true) override;
+    void setConfiguration(String config, bool save = true, bool performInit = false) override;
 
     void process() override;
 

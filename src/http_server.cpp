@@ -463,8 +463,8 @@ void HttpServer::initPrivate()
             stopCond2 = request->getParam("powerMeasStopCond2", true)->value();
         }
         PowerMeas::setActiveDeviceType(deviceType);
-        PowerMeas::setConfiguration(PowerMeas::DEV_BL0939, bl0939Config);
-        PowerMeas::setConfiguration(PowerMeas::DEV_ADE7953, ade7953Config);
+        PowerMeas::setConfiguration(PowerMeas::DEV_BL0939, bl0939Config, deviceType == PowerMeas::DEV_BL0939);
+        PowerMeas::setConfiguration(PowerMeas::DEV_ADE7953, ade7953Config, deviceType == PowerMeas::DEV_ADE7953);
         PowerMeas::setConditionConfig(0, stopCond1);
         PowerMeas::setConditionConfig(1, stopCond2);
         request->send_P(200, "text/html", getHttpConfigSaved(), defaultProcessor);

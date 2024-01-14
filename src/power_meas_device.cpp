@@ -64,7 +64,7 @@ String PowerMeasDevice::getConfiguration()
     return "{}";
 }
 
-void PowerMeasDevice::setConfiguration(String config, bool save)
+void PowerMeasDevice::setConfiguration(String config, bool save, bool performInit)
 {
 
 }

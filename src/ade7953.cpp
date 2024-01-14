@@ -98,8 +98,10 @@ void ADE7953::init()
     {
         if (m_peripheralIndex == 0)
             m_i2c = &Wire;
+#ifdef ESP32
         else if (m_peripheralIndex == 1)
             m_i2c = &Wire1;
+#endif
         if (m_i2c)
         {
             m_i2c->begin(m_pin0Index, m_pin1Index);
@@ -176,7 +178,7 @@ String ADE7953::getConfiguration()
     return result;
 }
 
-void ADE7953::setConfiguration(String config, bool save)
+void ADE7953::setConfiguration(String config, bool save, bool performInit)
 {
     DynamicJsonDocument json(512);
     DeserializationError error = deserializeJson(json, config);
@@ -233,7 +235,8 @@ void ADE7953::setConfiguration(String config, bool save)
             Config::flush();
             Log::info("ADE7953", "Configuration saved");
         }
-        init();
+        if (performInit)
+            init();
     }
 }
 

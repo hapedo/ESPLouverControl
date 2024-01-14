@@ -48,7 +48,7 @@ public:
 
     static String getConfiguration(DeviceType deviceType);
 
-    static void setConfiguration(DeviceType deviceType, String config);
+    static void setConfiguration(DeviceType deviceType, String config, bool performInit = false);
 
     static bool getConditionResult(uint8_t conditionIndex);
 

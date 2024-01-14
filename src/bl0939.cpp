@@ -112,7 +112,7 @@ String BL0939::getConfiguration()
     return result;
 }
 
-void BL0939::setConfiguration(String config, bool save)
+void BL0939::setConfiguration(String config, bool save, bool performInit)
 {
     DynamicJsonDocument json(512);
     DeserializationError error = deserializeJson(json, config);
@@ -143,7 +143,8 @@ void BL0939::setConfiguration(String config, bool save)
             Config::flush();
             Log::info("BL0939", "Configuration saved");
         }
-        init();
+        if (performInit)
+            init();
     }
 }
 

@@ -36,7 +36,7 @@ public:
 
     virtual String getConfiguration();
 
-    virtual void setConfiguration(String config, bool save = true);
+    virtual void setConfiguration(String config, bool save = true, bool performInit = false);
 
     virtual void process();
 

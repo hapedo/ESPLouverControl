@@ -137,11 +137,11 @@ String PowerMeas::getConfiguration(DeviceType deviceType)
     return "{}";
 }
 
-void PowerMeas::setConfiguration(DeviceType deviceType, String config)
+void PowerMeas::setConfiguration(DeviceType deviceType, String config, bool performInit)
 {
     PowerMeas& inst = getInstance();
     if (deviceType < inst.m_devices.size())
-        return inst.m_devices[deviceType]->setConfiguration(config);
+        return inst.m_devices[deviceType]->setConfiguration(config, true, performInit);
 }
 
 bool PowerMeas::getConditionResult(uint8_t conditionIndex)

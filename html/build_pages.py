@@ -10,7 +10,7 @@ def writeFile(fileName : str, lines):
     file.writelines(lines)
     file.close()
 
-def createRecord(fileName : str, variableName : str, functionName : str, utf8 : bool = False):
+def createRecord(fileName : str, variableName : str, functionName : str, utf8 : bool = True):
     d = dict()
     d["functionName"] = functionName
     d["variable"] = []
@@ -28,7 +28,7 @@ def createRecord(fileName : str, variableName : str, functionName : str, utf8 : 
             for ii in range(len(content[i])):
                 s = s + hex(content[i][ii]) + ", "
             if (i == len(content) - 1):
-                s = s[:len(s) - 2]
+                s = s[:len(s) - 2] + ", 0x00"
             d["variable"].append(s + "\n")
         d["variable"].append("};\n")
     d["function"] = []
@@ -65,6 +65,7 @@ records = []
 # CSS requires to be encoded in UTF8 with BOM for ESP8266
 records.append(createRecord("default.css", "httpDefaultCss", "getHttpDefaultCss", True))
 records.append(createRecord("index.html", "httpIndex", "getHttpIndex"))
+records.append(createRecord("ota.html", "httpOTA", "getHttpOTA"))
 records.append(createRecord("info_module.html", "httpModuleInfo", "getHttpModuleInfo"))
 records.append(createRecord("config_module.html", "httpModuleConfig", "getHttpModuleConfig"))
 records.append(createRecord("config_gpio.html", "httpGpioConfig", "getHttpGpioConfig"))

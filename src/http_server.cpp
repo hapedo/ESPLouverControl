@@ -503,6 +503,10 @@ void HttpServer::initPrivate()
         request->send(200, "text/json", PowerMeas::exportActiveDescriptorsToJSON());
         Log::debug("HTTP", "GET request, /powerMeasurementExport");
     });
+    m_httpUpdater.setup(&m_server, "/update", "", "", getHttpOTA());
+/*    m_server.on("/update", HTTP_GET, [](AsyncWebServerRequest *request){
+        request->send_P(200, "text/html", getHttpOTA(), defaultProcessor);
+    });    */
     m_server.onNotFound([&](AsyncWebServerRequest *request){
         Log::debug("HTTP", "GET request, not found, redirecting");
         AsyncWebServerResponse *response = request->beginResponse(302, "text/plain", "redirect to captive portal");
@@ -510,7 +514,7 @@ void HttpServer::initPrivate()
         request->send(response);
     });
     m_server.addHandler(new CaptiveRequestHandler()).setFilter(ON_AP_FILTER);
-    AsyncElegantOTA.begin(&m_server);
+    //AsyncElegantOTA.begin(&m_server);
 /*    AsyncElegantOTA.onStart([]{
         Log::info("HTTP", "Firmware update started");
     });*/

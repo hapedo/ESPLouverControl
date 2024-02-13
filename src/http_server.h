@@ -1,7 +1,7 @@
 #pragma once
 // To avoid clashes with already declared constants add WEBSERVER_H directive
 #include <ESPAsyncWebSrv.h>
-#include <AsyncElegantOTA.h>
+#include "update_server.h"
 #include <DNSServer.h>
 
 class HttpServer
@@ -80,6 +80,7 @@ private:
 
     WifiConfig m_wifiConfig;
     WifiClientBehavior m_wifiClientBehavior;
+    UpdateServer m_httpUpdater;
     bool m_wifiClientModeSwap;
     AsyncWebServer m_server;
     DNSServer m_dnsServer;

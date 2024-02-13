@@ -4,6 +4,8 @@ const char* getHttpDefaultCss();
 
 const char* getHttpIndex();
 
+const char* getHttpOTA();
+
 const char* getHttpModuleInfo();
 
 const char* getHttpModuleConfig();

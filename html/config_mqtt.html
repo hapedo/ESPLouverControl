@@ -32,6 +32,14 @@
                     <input type="text" class="input_field" required name="brokerPort" id = "brokerPort" value="%MQTT_BROKER_PORT%"/>
                     <label class="input_label" for="brokerPort">Broker port</label>
                 </div>
+                <div class="input">
+                    <input type="text" class="input_field" name="brokerUser" id = "brokerUser" value="%MQTT_BROKER_USER%"/>
+                    <label class="input_label" for="brokerUser">Username</label>
+                </div>
+                <div class="input">
+                    <input type="password" class="input_field" name="brokerPass" id = "brokerPass" value="%MQTT_BROKER_PASS%"/>
+                    <label class="input_label" for="brokerPass">Password</label>
+                </div>
                 <button class="button" type="submit" form="mqttConfig" value="Submit">Save</button>
             </form>
             <form action="/settings" id="back">

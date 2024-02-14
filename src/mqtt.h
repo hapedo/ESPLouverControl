@@ -34,6 +34,12 @@ public:
 
     static void setClientId(const char* id);
 
+    static void setAuthentication(const char* user, const char* password);
+
+    static String getAuthenticationUser();
+
+    static String getAuthenticationPassword();
+
     static void process();
 
 private:
@@ -58,5 +64,7 @@ private:
     String m_brokerIp;
     uint16_t m_brokerPort;
     String m_clientId;
+    String m_user;
+    String m_password;
     uint64_t m_lastReconnectTime;
 };

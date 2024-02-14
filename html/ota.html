@@ -14,7 +14,7 @@
         }
 
         .progress {
-            width: 100%;
+            width: 100%%;
             height: 8px;
             background: #e1e4e8;
             border-radius: 4px;
@@ -23,15 +23,15 @@
 
         .progress .progress-bar {
             display: block;
-            height: 100%;
+            height: 100%%;
             background: #ff6100;
-            background-size: 300% 100%;
+            background-size: 300%% 100%%;
             -webkit-animation: progress-animation 2s linear infinite;
             animation: progress-animation 2s linear infinite;
         }
 
         .input-file {
-            width: 100%;
+            width: 100%%;
             border: 0px transparent;
             padding: 4px 4px 4px 4px;
             margin-bottom: 10px;
@@ -39,24 +39,6 @@
 
         .additional-info {
             height: 67px;
-        }
-
-        @-webkit-keyframes progress-animation {
-            0% {
-                background-position: 100%;
-            }
-            100% {
-                background-position: 0;
-            }
-        }
-
-        @keyframes progress-animation {
-            0% {
-                background-position: 100%;
-            }
-            100% {
-                background-position: 0;
-            }
         }
 
         .tile-container {
@@ -79,7 +61,7 @@
 
         <input accept='.bin,.bin.gz' class="input-file" id="file1" name='firmware' type="file"><br>
         <div class="progress">
-            <span class="progress-bar" id="progressBar" style="width: 0%"></span>
+            <span class="progress-bar" id="progressBar" style="width: 0%%"></span>
         </div>
         <div class="additional-info">
             <p id="loaded_n_total"></p>
@@ -142,20 +124,22 @@
         }
 
         function setProgressPercent(percent) {
+            console.log("Update: " + percent);
             if (percent > 100)
-                percent = 100
-            _("progressBar").style = 'width: ' + percent + '%';
-            _("status").innerHTML = percent + "% flashed... please wait";
+                percent = 100;
+            _("progressBar").style = 'width: ' + percent + '%%';
+            _("status").innerHTML = percent + "%% flashed... please wait";
         }
 
         function updateProgressBar(json) {
             let out = "";
-            if (json.hasOwnProperty("bytes"))
+            if (json.hasOwnProperty("bytes") && (totalBytes > 0))
             {
                 b = json["bytes"]
+                console.log("Update json: " + b + ", " + totalBytes);
                 if (b > totalBytes)
                     b = 0
-                var percent = Math.round((json["bytes"] / totalBytes) * 100);
+                var percent = Math.round((b / totalBytes) * 100);
                 setProgressPercent(percent);
             }
         }        
@@ -195,13 +179,13 @@
             }
             else 
             {
-                updateProgressBar(100);
-                _("status").innerHTML = 'Upload Success, waiting for reboot...'; //event.target.responseText;
                 intervalId = setInterval(function() {
                     window.location.replace("/");
                 }, 4000);
+                setProgressPercent(100);
+                _("status").innerHTML = 'Upload Success, waiting for reboot...'; //event.target.responseText;
+                document.getElementById("back").style.display = "block";
             }
-            _("progressBar").value = 0; //wil clear progress bar after successful upload
         }
 
         function startHandler(event) {
@@ -238,7 +222,7 @@
             }else{
                 _('button-send').disabled = true;
             }
-            _('status').innerHTML = "Firmware Upload!";
+            _('status').innerHTML = "File selected, click Upload to start update.";
             _("loaded_n_total").innerHTML = "";
         });
     </script>

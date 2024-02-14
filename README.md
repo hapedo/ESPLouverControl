@@ -1,7 +1,11 @@
 # Louver control for ESP based devices
-This contains a firmware for louver control for Tasmota-compatible ESP based devices like Sonoff DUAL R3. It was created because I was not satisfied with Tasmota configuration specific to louvers (not the same as blinds and curtains). Louvers require specific control of lamellas.
+This contains a firmware for louver control for Tasmota-compatible ESP based devices like Sonoff DUAL R3,
+Shelly 2PM or Athom KM01. It was created because I was not satisfied with Tasmota configuration 
+specific to louvers (not the same as blinds and curtains). Louvers require specific control of lamellas.
 
-## Howto & configuration  
+## Howto & configuration
+[Release notes](doc/release_notes.md)
+  
 [How to build](doc/build.md)
 
 [Module info](doc/module_info.md)
@@ -29,6 +33,8 @@ And 2 GPIO relays:
  - motor down
 
 Short key press controls relays directly, long press (more than 2 seconds) makes louver to fully open/close (time can be configured).
+
+Sequential press of down and then up (holding down) key causes full close and open lamellas.
 
 5 second long press of reset button causes loading defaults and module reboot to AP mode.
 

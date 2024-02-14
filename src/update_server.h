@@ -7,7 +7,7 @@ class UpdateServer {
 
   public:
     UpdateServer();
-    void setup(AsyncWebServer *server, const String& path, const String& username, const String& password, const char* html);
+    void setup(AsyncWebServer *server, const String& path, const String& username, const String& password, const char* html, AwsTemplateProcessor processor = nullptr);
 
   private:
     AsyncWebServer *m_server;
@@ -17,6 +17,7 @@ class UpdateServer {
     bool      m_authenticated;
     String    m_updaterError;
     const char* m_html;
+    AwsTemplateProcessor m_pageProcessor;
     size_t m_lastReportedSize;
     size_t m_totalSize;
 

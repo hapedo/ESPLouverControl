@@ -7,7 +7,6 @@ Following libraries were used:
  - FS
  - WiFi
  - AsyncTCP
- - AsyncElegantOTA
  - DNSServer
  - ArduinoJson
  - EEPROM

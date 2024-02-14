@@ -405,6 +405,8 @@ void HttpServer::initPrivate()
         String brokerIp = Mqtt::getBrokerIp();
         uint16_t brokerPort = Mqtt::getBrokerPort();
         String clientId = Mqtt::getClientId();
+        String user = Mqtt::getAuthenticationUser();
+        String pass = Mqtt::getAuthenticationPassword();
         if (request->hasParam("enabled", true))
         {
             if (request->getParam("enabled", true)->value() == "1")
@@ -424,10 +426,19 @@ void HttpServer::initPrivate()
         {
             brokerPort = request->getParam("brokerPort", true)->value().toInt();
         }
+        if (request->hasParam("brokerUser", true)) 
+        {
+            user = request->getParam("brokerUser", true)->value();
+        }
+        if (request->hasParam("brokerPass", true)) 
+        {
+            pass = request->getParam("brokerPass", true)->value();
+        }        
         Mqtt::setEnabled(enabled);
         Mqtt::setBrokerIp(brokerIp.c_str());
         Mqtt::setBrokerPort(brokerPort);
         Mqtt::setClientId(clientId.c_str());
+        Mqtt::setAuthentication(user.c_str(), pass.c_str());
         request->send_P(200, "text/html", getHttpConfigSaved(), defaultProcessor);
     });
     m_server.on("/powerMeasConfig", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -503,10 +514,7 @@ void HttpServer::initPrivate()
         request->send(200, "text/json", PowerMeas::exportActiveDescriptorsToJSON());
         Log::debug("HTTP", "GET request, /powerMeasurementExport");
     });
-    m_httpUpdater.setup(&m_server, "/update", "", "", getHttpOTA());
-/*    m_server.on("/update", HTTP_GET, [](AsyncWebServerRequest *request){
-        request->send_P(200, "text/html", getHttpOTA(), defaultProcessor);
-    });    */
+    m_httpUpdater.setup(&m_server, "/update", "", "", getHttpOTA(), defaultProcessor);
     m_server.onNotFound([&](AsyncWebServerRequest *request){
         Log::debug("HTTP", "GET request, not found, redirecting");
         AsyncWebServerResponse *response = request->beginResponse(302, "text/plain", "redirect to captive portal");
@@ -514,10 +522,6 @@ void HttpServer::initPrivate()
         request->send(response);
     });
     m_server.addHandler(new CaptiveRequestHandler()).setFilter(ON_AP_FILTER);
-    //AsyncElegantOTA.begin(&m_server);
-/*    AsyncElegantOTA.onStart([]{
-        Log::info("HTTP", "Firmware update started");
-    });*/
     m_server.begin();
 }
 
@@ -698,6 +702,10 @@ String HttpServer::mqttConfigProcessor(const String& var)
         return Mqtt::getBrokerIp();
     if (var == "MQTT_BROKER_PORT")
         return String(Mqtt::getBrokerPort());
+    if (var == "MQTT_BROKER_USER")
+        return String(Mqtt::getAuthenticationUser());
+    if (var == "MQTT_BROKER_PASS")
+        return String(Mqtt::getAuthenticationPassword());
     return defaultProcessor(var);
 }
 

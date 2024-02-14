@@ -10,6 +10,8 @@ Mqtt::Mqtt() :
     m_brokerIp(DEFAULT_BROKER_IP),
     m_brokerPort(DEFAULT_BROKER_PORT),
     m_clientId(DEFAULT_CLIENT_ID),
+    m_user(""),
+    m_password(""),
     m_lastReconnectTime(0)
 {
 
@@ -22,7 +24,9 @@ void Mqtt::loadConfig()
     inst.m_brokerIp = Config::getString("mqtt/broker_ip", DEFAULT_BROKER_IP);
     inst.m_brokerPort = Config::getInt("mqtt/broker_port", DEFAULT_BROKER_PORT);
     inst.m_clientId = Config::getString("mqtt/client_id", DEFAULT_CLIENT_ID);
-    Log::info("MQTT", "Configuration loaded, broker=%s:%d, client ID=\"%s\"", inst.m_brokerIp.c_str(), inst.m_brokerPort, inst.m_clientId.c_str());
+    inst.m_user = Config::getString("mqtt/user", "");
+    inst.m_password = Config::getString("mqtt/password", "");
+    Log::info("MQTT", "Configuration loaded, broker=%s:%d, client ID=\"%s\", user=\"%s\"", inst.m_brokerIp.c_str(), inst.m_brokerPort, inst.m_clientId.c_str(), inst.m_user.c_str());
 }
 
 bool Mqtt::getEnabled()
@@ -80,6 +84,27 @@ void Mqtt::setClientId(const char* id)
     getInstance().m_clientId = String(id);
 }
 
+void Mqtt::setAuthentication(const char* user, const char* password)
+{
+    Log::info("MQTT", "User set to \"%s\", password=\"*\"", user);
+    Config::setString("mqtt/user", String(user));
+    Config::setString("mqtt/password", String(password));
+    Config::flush();
+    getInstance().m_user = user;
+    getInstance().m_password = password;
+}
+
+String Mqtt::getAuthenticationUser()
+{
+    return getInstance().m_user;
+}
+
+String Mqtt::getAuthenticationPassword()
+{
+    return getInstance().m_password;
+}
+
+
 void Mqtt::reconnect()
 {
     IPAddress ip;
@@ -92,7 +117,7 @@ void Mqtt::reconnect()
         m_client.disconnect();
     m_client.setServer(ip, m_brokerPort);
     m_client.setCallback(Mqtt::mqttCallback);
-    if (m_client.connect(m_clientId.c_str()))
+    if (m_client.connect(m_clientId.c_str(), m_user.c_str(), m_password.c_str()))
     {
         Log::info("MQTT", "Connected to broker, IP=%s", m_brokerIp.c_str());
         String topic;

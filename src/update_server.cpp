@@ -1,26 +1,27 @@
 #include "update_server.h"
 #include <StreamString.h>
+#if defined(ESP32) 
+#include <Update.h>
+#endif
 #include "log.h"
 #include "module.h"
 
-const char UpdateSuccessResponse[] PROGMEM = R"=====(
-  <META http-equiv='refresh' content='15;URL=/'>Update Success! Rebooting...
-)=====";
-
 UpdateServer::UpdateServer() {
-    m_server = NULL;
+    m_server = nullptr;
     m_username = emptyString;
     m_password = emptyString;
     m_authenticated = false;
     m_totalSize = 0;
+    m_pageProcessor = nullptr;
 }
 
-void UpdateServer::setup(AsyncWebServer *server, const String& path, const String& username, const String& password, const char* html) {
+void UpdateServer::setup(AsyncWebServer *server, const String& path, const String& username, const String& password, const char* html, AwsTemplateProcessor processor) {
     m_server = server;
     m_username = username;
     m_password = password;
     m_html = html;
     m_totalSize = 0;
+    m_pageProcessor = processor;
 
     Log::info("OTA", "Configuring OTA, path=\"%s\"", path.c_str());
 
@@ -30,7 +31,8 @@ void UpdateServer::setup(AsyncWebServer *server, const String& path, const Strin
       if(this->m_username != emptyString && this->m_password != emptyString && request->authenticate(this->m_username.c_str(), this->m_password.c_str()))
         return request->requestAuthentication();
         
-      request->send_P(200, PSTR("text/html"), m_html);
+      if (m_pageProcessor)
+        request->send_P(200, PSTR("text/html"), m_html, m_pageProcessor);
     });
 
     this->m_server->on(String(path + "Progress").c_str(), HTTP_GET, [&](AsyncWebServerRequest *request){
@@ -56,7 +58,6 @@ void UpdateServer::setup(AsyncWebServer *server, const String& path, const Strin
       if(!index) 
       {
         Log::debug("OTA", "File upload request, filename=\"%s\"", filename.c_str());
-        Update.runAsync(true); 
         this->m_updaterError.clear();
 
         this->m_authenticated = (this->m_username == emptyString || this->m_password == emptyString || request->authenticate(this->m_username.c_str(), this->m_password.c_str()));
@@ -68,12 +69,20 @@ void UpdateServer::setup(AsyncWebServer *server, const String& path, const Strin
         else {
           Log::debug("OTA", "Authenticated Update");
         }
-
+#if defined(ESP8266)
         uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
         Log::debug("OTA", "Starting, max sketch size %d bytes", maxSketchSpace);
         m_lastReportedSize = 0;
         m_totalSize = 0;
-        if (!Update.begin(maxSketchSpace, U_FLASH)) { //start with max available size
+        Update.runAsync(true); 
+        if (!Update.begin(maxSketchSpace, U_FLASH)) 
+        {
+#else
+        Log::debug("OTA", "Starting");
+        m_lastReportedSize = 0;
+        if (!Update.begin(UPDATE_SIZE_UNKNOWN, U_FLASH))
+        {
+#endif
           this->_setUpdaterError();
         }
         Log::debug("OTA", "Started");

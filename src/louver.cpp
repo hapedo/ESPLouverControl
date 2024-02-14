@@ -431,7 +431,7 @@ void Louver::process()
             }
             break;
         case ST_UP:
-            if (!isKeyUpActive)
+            if (!isKeyUpActive && isUpPressDebounced)
             {
                 Log::info("Louver", "Up released");
                 inst.delay(ST_IDLE);
@@ -439,20 +439,26 @@ void Louver::process()
             }
             if (isKeyUpActive && isUpHoldDebounced)
             {
-                Log::info("Louver", "Up hold detected");
+                Log::info("Louver", "Up hold detected - full open");
                 inst.fullOpen();
             }
             break;
         case ST_DOWN:
-            if (!isKeyDownActive)
+            if (!isKeyDownActive && isDownPressDebounced)
             {
                 Log::info("Louver", "Down released");
                 inst.delay(ST_IDLE);
                 break;
             }
+            if (isKeyUpActive && isUpPressDebounced)
+            {
+                Log::info("Louver", "Down and up pressed - full close and open lamellas");
+                inst.fullCloseAndOpenLamellas();
+                break;
+            }
             if (isKeyDownActive && isDownHoldDebounced)
             {
-                Log::info("Louver", "Down hold detected");
+                Log::info("Louver", "Down hold detected - full close");
                 inst.fullClose();
             }
             break;
@@ -460,22 +466,22 @@ void Louver::process()
             {
                 bool upCond = PowerMeas::getConditionResult(0);
                 bool downCond = PowerMeas::getConditionResult(1);
-                if (!isKeyUpActive)
+                if (!isKeyUpActive && isUpPressDebounced)
                 {
                     inst.m_keyUpReleased = true;
                 }
-                if (!isKeyDownActive)
+                if (!isKeyDownActive && isDownPressDebounced)
                 {
                     inst.m_keyDownReleased = true;
                 }
 
-                if ((inst.m_keyUpReleased) && (isKeyUpActive))
+                if ((inst.m_keyUpReleased) && (isKeyUpActive && isUpPressDebounced))
                 {
                     Log::info("Louver", "Terminating movement due to up key press");
                     inst.delay(ST_WAIT_RELEASE);
                     break;
                 }
-                if ((inst.m_keyDownReleased) && (isKeyDownActive))
+                if ((inst.m_keyDownReleased) && (isKeyDownActive && isDownPressDebounced))
                 {
                     Log::info("Louver", "Terminating movement due to down key press");
                     inst.delay(ST_WAIT_RELEASE);
@@ -519,7 +525,7 @@ void Louver::process()
             }
             break;
         case ST_WAIT_RELEASE:
-            if ((!isKeyUpActive) && (!isKeyDownActive))
+            if (!isKeyUpActive && isUpPressDebounced && !isKeyDownActive && isDownPressDebounced)
             {
                 inst.m_state = ST_IDLE;
                 Log::info("Louver", "All keys released");

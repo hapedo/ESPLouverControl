@@ -3,6 +3,13 @@ This contains a firmware for louver control for Tasmota-compatible ESP based dev
 Shelly 2PM or Athom KM01. It was created because I was not satisfied with Tasmota configuration 
 specific to louvers (not the same as blinds and curtains). Louvers require specific control of lamellas.
 
+## Why should I use it rather than Tasmota
+ - Lightweight and responsive
+ - User friendly - easy to setup
+ - Power measurement can be used as end switches and stop long movements
+ - MQTT remote control
+ - It just works!
+ 
 ## Howto & configuration
 [Release notes](doc/release_notes.md)
 
@@ -34,9 +41,10 @@ And 2 GPIO relays:
  - motor up
  - motor down
 
-Short key press controls relays directly, long press (more than 2 seconds) makes louver to fully open/close (time can be configured).
-
-Sequential press of down and then up (holding down) key causes full close and open lamellas.
+Supported movements executed by key press:
+ - Short key press controls relays directly
+ - Long press (more than 2 seconds) makes louver to fully open/close (time can be configured).
+ - Sequential press of down and then up (while holding down) key makes louver to fully close and open lamellas.
 
 5 second long press of reset button causes loading defaults and module reboot to AP mode.
 
@@ -77,6 +85,7 @@ This project is under heavy development and it's still not finished.
 
 To do:
  - Export / import configuration
+ - LED support
  
 
 

@@ -20,7 +20,7 @@ Log levels:
 Default log level is set to 2 for all modules.
 
 Configuration string format (JSON):
-```
+```json
 {"module1":level, "module2":level}
 ``` 
 
@@ -38,7 +38,7 @@ Supported modules:
  - PowerMeas
  
 Example (sets default log level to debug, BL0939 log level to verbose):
-```
+```json
 {"*":3,"BL0939":4}
 ```
 

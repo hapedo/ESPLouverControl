@@ -15,7 +15,7 @@ Full open movement condition. Full open movement is stopped when power condition
 is satisfied.
 
 Format (JSON):
-```
+```json
 {"index":0,"threshold":0.00,"comparator":"==","duration_milli":2000}
 ```
 
@@ -36,7 +36,7 @@ Full close movement condition. Full close movement is stopped when power conditi
 is satisfied.
 
 Format (JSON):
-```
+```json
 {"index":0,"threshold":0.00,"comparator":"==","duration_milli":2000}
 ```
 
@@ -56,7 +56,7 @@ Where:
 BL0939 driver configuration string.
 
 Format (JSON):
-```
+```json
 {"serial":1,"rx_gpio":26,"tx_gpio":25,"refresh_period_milli":500}
 ```
 
@@ -73,7 +73,7 @@ ADE7953 driver configuration string. Two modes are supported (specified by "mode
 
 ### I2C mode
 Config format (JSON):
-```
+```json
 {"mode":"i2c","i2c":0,"sda_gpio":26,"scl_gpio":25,"reset_gpio":33,"refresh_period_milli":500}
 ```
 
@@ -87,7 +87,7 @@ Where:
  
 ### UART mode (untested)
 Config format (JSON):
-```
+```json
 {"mode":"uart","serial":0,"rx_gpio":26,"tx_gpio":25,"reset_gpio":33,"refresh_period_milli":500}
 ```
 

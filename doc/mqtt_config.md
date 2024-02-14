@@ -15,4 +15,10 @@ MQTT broker IP
 ## Broker port
 MQTT broker port
 
+## Username
+Username to be used to connect to MQTT broker
+
+## Password
+Password to be used to connect to MQTT broker
+
 [Main page](../README.md)

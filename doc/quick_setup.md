@@ -73,12 +73,12 @@ You can enable stop movement conditions when your module supports power measurem
 ## Power measurement config
 Power measurement can be used to simulate end switches and stop long movements.
 
-Example for Sonoff DUAL R3 - movement up (stops when Power 1 is below 20W for 1500ms):
+Example for Sonoff DUAL R3 (select BL0939 driver) - movement up (stops when Power 1 is below 20W for 1500ms):
 ```json
 {"index":3,"threshold":20.00,"comparator":">","duration_milli":1500}
 ```
 
-Example for Sonoff DUAL R3 - movement down(stops when Power 2 is below 20W for 1500ms):
+Example for Sonoff DUAL R3 (select BL0939 driver) - movement down (stops when Power 2 is below 20W for 1500ms):
 ```json
 {"index":4,"threshold":20.00,"comparator":">","duration_milli":1500}
 ```

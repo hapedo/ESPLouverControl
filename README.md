@@ -5,6 +5,8 @@ specific to louvers (not the same as blinds and curtains). Louvers require speci
 
 ## Howto & configuration
 [Release notes](doc/release_notes.md)
+
+[Quick setup tutorial](doc/quick_setup.md)
   
 [How to build](doc/build.md)
 

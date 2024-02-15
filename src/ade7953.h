@@ -26,11 +26,36 @@ public:
 
 private:
 
-    void write8(uint16_t reg, uint8_t value);
-    void write16(uint16_t reg, uint16_t value);
-    void write32(uint16_t reg, uint32_t value);
-    bool read16(uint16_t reg, uint16_t& value);
-    bool read32(uint16_t reg, uint32_t& value);
+    enum PgaGain 
+    {
+        PGA_GAIN_1 = 0x00,
+        PGA_GAIN_2 = 0x01,
+        PGA_GAIN_4 = 0x02,
+        PGA_GAIN_8 = 0x03,
+        PGA_GAIN_16 = 0x04,
+        PGA_GAIN_22 = 0x05
+    };
+
+    struct AdeConfig
+    {
+        float voltageScale;
+        float voltageOffset;
+        float currentScale0;
+        float currentScale1;
+        float currentOffset0;
+        float currentOffset1;
+        float apowerScale0;
+        float apowerScale1;
+        float aenergyScale0;
+        float aenergyScale1;
+        PgaGain voltagePgaGain;
+        PgaGain currentPgaGain0;
+        PgaGain currentPgaGain1;
+    };
+
+    uint8_t getRegSize(uint16_t reg);
+    void write(uint16_t reg, int32_t value);
+    bool read(uint16_t reg, bool isSigned, int32_t& value);
 
     Mode m_mode;
     uint8_t m_peripheralIndex;
@@ -41,4 +66,5 @@ private:
     TwoWire* m_i2c;
     HardwareSerial* m_serial;
     uint64_t m_lastReadTimestamp;
+    AdeConfig m_config;
 };

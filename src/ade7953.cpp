@@ -1,36 +1,49 @@
 #include "ade7953.h"
+#include <stdlib.h>
 #include "profiles.h"
 #include "config.h"
 #include "log.h"
 #include "time.h"
 
-static constexpr uint8_t ADE_ADDRESS = 56; 
-static constexpr uint8_t PGA_V_8 =
-    0x007;  // PGA_V,  (R/W) Default: 0x00, Unsigned, Voltage channel gain configuration (Bits[2:0])
-static constexpr uint8_t PGA_IA_8 =
-    0x008;  // PGA_IA, (R/W) Default: 0x00, Unsigned, Current Channel A gain configuration (Bits[2:0])
-static constexpr uint8_t PGA_IB_8 =
-    0x009;  // PGA_IB, (R/W) Default: 0x00, Unsigned, Current Channel B gain configuration (Bits[2:0])
+#define ADE_ADDRESS 0x38
+// Registers
+//
+#define ADE_REG_LCYCMODE 0x004
+#define ADE_REG_PGA_V 0x007
+#define ADE_REG_PGA_IA 0x008
+#define ADE_REG_PGA_IB 0x009
+#define ADE_REG_UNNAMED 0x0FE
 
-static constexpr uint32_t AIGAIN_32 =
-    0x380;  // AIGAIN, (R/W)   Default: 0x400000, Unsigned,Current channel gain (Current Channel A)(32 bit)
-static constexpr uint32_t AVGAIN_32 = 0x381;  // AVGAIN, (R/W)   Default: 0x400000, Unsigned,Voltage channel gain(32 bit)
-static constexpr uint32_t AWGAIN_32 =
-    0x382;  // AWGAIN, (R/W)   Default: 0x400000, Unsigned,Active power gain (Current Channel A)(32 bit)
-static constexpr uint32_t AVARGAIN_32 =
-    0x383;  // AVARGAIN, (R/W) Default: 0x400000, Unsigned, Reactive power gain (Current Channel A)(32 bit)
-static constexpr uint32_t AVAGAIN_32 =
-    0x384;  // AVAGAIN, (R/W)  Default: 0x400000, Unsigned,Apparent power gain (Current Channel A)(32 bit)
+#define ADE_REG_LINECYC 0x101
+#define ADE_REG_CONFIG 0x102
+#define ADE_REG_PERIOD 0x10E
+#define ADE_REG_RESERVED 0x120
 
-static constexpr uint32_t BIGAIN_32 =
-    0x38C;  // BIGAIN, (R/W)   Default: 0x400000, Unsigned,Current channel gain (Current Channel B)(32 bit)
-static constexpr uint32_t BVGAIN_32 = 0x38D;  // BVGAIN, (R/W)   Default: 0x400000, Unsigned,Voltage channel gain(32 bit)
-static constexpr uint32_t BWGAIN_32 =
-    0x38E;  // BWGAIN, (R/W)   Default: 0x400000, Unsigned,Active power gain (Current Channel B)(32 bit)
-static constexpr uint32_t BVARGAIN_32 =
-    0x38F;  // BVARGAIN, (R/W) Default: 0x400000, Unsigned, Reactive power gain (Current Channel B)(32 bit)
-static constexpr uint32_t BVAGAIN_32 =
-    0x390;  // BVAGAIN, (R/W)  Default: 0x400000, Unsigned,Apparent power gain (Current Channel B)(32 bit)
+#define ADE_REG_AIRMSOS 0x386
+#define ADE_REG_VRMSOS 0x388
+#define ADE_REG_BIRMSOS 0x392
+#define ADE_REG_AVA 0x310
+#define ADE_REG_BVA 0x311
+#define ADE_REG_AWATT 0x312
+#define ADE_REG_BWATT 0x313
+#define ADE_REG_AVAR 0x314
+#define ADE_REG_BVAR 0x315
+#define ADE_REG_IA 0x31A
+#define ADE_REG_IB 0x31B
+#define ADE_REG_V 0x31C
+#define ADE_REG_ANENERGYA 0x31E
+#define ADE_REG_ANENERGYB 0x31F
+#define ADE_REG_PFA 0x10A
+#define ADE_REG_PFB 0x10B
+
+#define ADE_REG_IRQSTATA 0x32D
+#define ADE_REG_IRQSTATA_RESET (1 << 20)
+
+#define ADE_REG_VERSION 0x702
+#define ADE_REG_EX_REF 0x800
+
+#define ADE_REG_CONFIG_HPFEN (1 << 2)
+#define ADE_REG_CONFIG_SWRST (1 << 7)
 
 ADE7953::ADE7953(Mode mode) :
     m_mode((Mode)PROFILE_DEFAULT_ADE7953_MODE),
@@ -45,16 +58,29 @@ ADE7953::ADE7953(Mode mode) :
 {
     appendDescriptor("Power factor 1", "%", ".0f");
     appendDescriptor("Power factor 2", "%", ".0f");
-    appendDescriptor("Apparent power 1", "W", ".0f");
-    appendDescriptor("Apparent power 2", "W", ".0f");
     appendDescriptor("Active power 1", "W", ".0f");
     appendDescriptor("Active power 2", "W", ".0f");
-    appendDescriptor("Reactive power 1", "W", ".0f");
-    appendDescriptor("Reactive power 2", "W", ".0f");
     appendDescriptor("Current 1", "A", ".3f");
     appendDescriptor("Current 2", "A", ".3f");
+    appendDescriptor("Energy 1", "Wh", ".3f");
+    appendDescriptor("Energy 2", "Wh", ".3f");
     appendDescriptor("Voltage", "V", ".0f");
     appendDescriptor("Frequency", "Hz", ".0f");
+
+    // Default config
+    m_config.voltageScale = .0000382602;
+    m_config.voltageOffset = -0.068;
+    m_config.currentScale0 = 0.00000949523;
+    m_config.currentScale1 = 0.00000949523;
+    m_config.currentOffset0 = -0.017;
+    m_config.currentOffset1 = -0.017;
+    m_config.apowerScale0 = (1 / 164.0);
+    m_config.apowerScale1 = (1 / 164.0);
+    m_config.aenergyScale0 = (1 / 25240.0);
+    m_config.aenergyScale1 = (1 / 25240.0);
+    m_config.voltagePgaGain = PGA_GAIN_1;
+    m_config.currentPgaGain0 = PGA_GAIN_1;
+    m_config.currentPgaGain1 = PGA_GAIN_1;
 }
 
 void ADE7953::init()
@@ -115,36 +141,61 @@ void ADE7953::init()
     }
     if (ok)
     {
-        // this->ade_write_8(0x0010, 0x04);
-        write8(0x00FE, 0xAD);
-        write16(0x0120, 0x0030);
-        uint32_t val32;
-        if (!read32(AWGAIN_32, val32))
+        int32_t value;
+        if (read(ADE_REG_VERSION, false, value))
         {
-            Log::error("ADE7953", "Unable to read register - power measurement disabled");
-            m_serial = nullptr;
-            m_i2c = nullptr;
+            Log::info("ADE7953", "Silicon version: 0x%02x (%d)", (int)value, (int)value);
+            write(ADE_REG_CONFIG, ADE_REG_CONFIG_SWRST);
+            delay(10);
+            int32_t val = 0;
+            uint64_t timeout = Time::nowRelativeMilli() + 2000;
+            do 
+            {
+                delay(10);
+                if (Time::nowRelativeMilli() > timeout)
+                {
+                    Log::error("ADE7953", "Unable to initialize - communication timeout");
+                    m_serial = nullptr;
+                    m_i2c = nullptr;
+                    return;
+                }
+            } while (!read(ADE_REG_IRQSTATA, false, value) || !(value & ADE_REG_IRQSTATA_RESET));
+            // Lock comms interface, enable high pass filter
+            write(ADE_REG_CONFIG, 0x04);
+            // Unlock unnamed (!) register 0x120 (see datasheet, page 18)
+            write(ADE_REG_UNNAMED, 0xAD);
+            // Set "optimal setting" (see datasheet, page 18)
+            write(ADE_REG_RESERVED, 0x30);
+            // Program measurement offsets.
+            if (m_config.voltageOffset != 0) 
+            {
+                write(ADE_REG_VRMSOS, (int32_t)(m_config.voltageOffset / m_config.voltageScale));
+            }
+            if (m_config.currentOffset0 != 0) 
+            {
+                write(ADE_REG_AIRMSOS, (int32_t)(m_config.currentOffset0 / m_config.currentScale0));
+            }
+            if (m_config.currentOffset1 != 0) 
+            {
+                write(ADE_REG_BIRMSOS, (int32_t)(m_config.currentOffset1 / m_config.currentScale1));
+            }
+
+            // Set PGA gains.
+            if (m_config.voltagePgaGain != 0) 
+            {
+                write(ADE_REG_PGA_V, m_config.voltagePgaGain);
+            }
+            if (m_config.currentPgaGain0 != 0) 
+            {
+                write(ADE_REG_PGA_IA, m_config.currentPgaGain0);
+            }
+            if (m_config.currentPgaGain1 != 0) 
+            {
+                write(ADE_REG_PGA_IB, m_config.currentPgaGain1);
+            }
+
+            write(ADE_REG_LCYCMODE, 0x40);
         }
-        // Set gains
-/*        write8(PGA_V_8, pga_v_);
-        write8(PGA_IA_8, pga_ia_);
-        write8(PGA_IB_8, pga_ib_);
-        write32(AVGAIN_32, vgain_);
-        write32(AIGAIN_32, aigain_);
-        write32(BIGAIN_32, bigain_);
-        write32(AWGAIN_32, awgain_);
-        write32(BWGAIN_32, bwgain_);*/
-        // Read back gains for debugging
-/*
-        this->ade_read_8(PGA_V_8, &pga_v_);
-        this->ade_read_8(PGA_IA_8, &pga_ia_);
-        this->ade_read_8(PGA_IB_8, &pga_ib_);
-        this->ade_read_32(AVGAIN_32, &vgain_);
-        this->ade_read_32(AIGAIN_32, &aigain_);
-        this->ade_read_32(BIGAIN_32, &bigain_);
-        this->ade_read_32(AWGAIN_32, &awgain_);
-        this->ade_read_32(BWGAIN_32, &bwgain_);
-        */
     }
 }
 
@@ -240,81 +291,52 @@ void ADE7953::setConfiguration(String config, bool save, bool performInit)
     }
 }
 
-void ADE7953::write8(uint16_t reg, uint8_t value)
+uint8_t ADE7953::getRegSize(uint16_t reg) 
 {
+    uint8_t size = 1;
+    if (reg != ADE_REG_VERSION && reg != ADE_REG_EX_REF) 
+    {
+        if (reg >= 0x300) size++;
+        if (reg >= 0x200) size++;
+        if (reg >= 0x100) size++;
+    }
+    return size;
+}
+
+void ADE7953::write(uint16_t reg, int32_t value)
+{
+    uint8_t size = getRegSize(reg);
+    if ((size > 4) || (size < 0))
+        return;
     if ((m_mode == M_UART) && (m_serial))
     {
         m_serial->flush();
         m_serial->write(0xca);
         m_serial->write(reg >> 8);
         m_serial->write(reg & 0xff);
-        m_serial->write(value);
+        while(size--)
+        {
+            m_serial->write((value >> (8 * size)) & 0xff);
+        }
     }
     if ((m_mode == M_I2C) && (m_i2c))
     {
         m_i2c->beginTransmission(ADE_ADDRESS);
         m_i2c->write(reg >> 8);
         m_i2c->write(reg & 0xff);
-        m_i2c->write(value);
+        while(size--)
+        {
+            m_i2c->write((value >> (8 * size)) & 0xff);
+        }
         if (m_i2c->endTransmission() != 0)
             Log::error("ADE7953", "Unable to write register %x, no ACK?", reg);
     }
 }
 
-void ADE7953::write16(uint16_t reg, uint16_t value)
+bool ADE7953::read(uint16_t reg, bool isSigned, int32_t& value)
 {
-    if ((m_mode == M_UART) && (m_serial))
-    {
-        m_serial->flush();
-        m_serial->write(0xca);
-        m_serial->write(reg >> 8);
-        m_serial->write(reg & 0xff);
-        m_serial->write(value >> 8);
-        m_serial->write(value & 0xff);
-    }
-    if ((m_mode == M_I2C) && (m_i2c))
-    {
-        m_i2c->beginTransmission(ADE_ADDRESS);
-        m_i2c->write(reg >> 8);
-        m_i2c->write(reg & 0xff);
-        m_i2c->write(value >> 8);
-        m_i2c->write(value & 0xff);
-        if (m_i2c->endTransmission() != 0)
-            Log::error("ADE7953", "Unable to write register %x, no ACK?", reg);
-
-    }
-}
-
-void ADE7953::write32(uint16_t reg, uint32_t value)
-{
-    if ((m_mode == M_UART) && (m_serial))
-    {
-        m_serial->flush();
-        m_serial->write(0xca);
-        m_serial->write(reg >> 8);
-        m_serial->write(reg & 0xff);
-        m_serial->write(value >> 24);
-        m_serial->write((value >> 16) & 0xff);
-        m_serial->write((value >> 8) & 0xff);
-        m_serial->write(value & 0xff);
-    }
-    if ((m_mode == M_I2C) && (m_i2c))
-    {
-        m_i2c->beginTransmission(ADE_ADDRESS);
-        m_i2c->write(reg >> 8);
-        m_i2c->write(reg & 0xff);
-        m_i2c->write(value >> 24);
-        m_i2c->write((value >> 16) & 0xff);
-        m_i2c->write((value >> 8) & 0xff);
-        m_i2c->write(value & 0xff);
-        if (m_i2c->endTransmission() != 0)
-            Log::error("ADE7953", "Unable to write register %x, no ACK?", reg);
-
-    }
-}
-
-bool ADE7953::read16(uint16_t reg, uint16_t& value)
-{
+    int32_t v = 0;
+    uint8_t size = getRegSize(reg);
     if ((m_mode == M_UART) && (m_serial))
     {
         m_serial->flush();
@@ -322,18 +344,16 @@ bool ADE7953::read16(uint16_t reg, uint16_t& value)
         m_serial->write(reg >> 8);
         m_serial->write(reg & 0xff);
         delay(1);
-        value = 0;
         uint8_t cnt = 0;
         uint64_t start = Time::nowRelativeMilli();
         while(Time::nowRelativeMilli() < start + 500)
         {
             while(m_serial->available())
             {
-                value <<= 8;
-                value |= m_serial->read();
+                v = (v << 8) | m_serial->read();
                 cnt++;
-                if (cnt == 2)
-                    return true;
+                if (cnt == size)
+                    break;
             }
         }
     }
@@ -344,65 +364,37 @@ bool ADE7953::read16(uint16_t reg, uint16_t& value)
         m_i2c->write(reg & 0xff);
         if (m_i2c->endTransmission() == 0)
         {
-            m_i2c->requestFrom(ADE_ADDRESS, (uint8_t)1);
+            m_i2c->requestFrom((int)ADE_ADDRESS, (int)size);
             value = 0;
-            if(m_i2c->available() >= 1)
+            if(m_i2c->available() >= size)
             {
-                value |= (uint16_t)m_i2c->read() << 8;
-                value |= m_i2c->read();
-                return true;
+                for(uint8_t i = 0; i < size; i++)
+                {
+                    v = (v << 8) | m_i2c->read();
+                }
+            }
+            else
+            {
+                Log::error("ADE7953", "Error reading 16 bit register %x", reg);
+                return false;
             }
         }
     }
-    Log::error("ADE7953", "Error reading 16 bit register %x", reg);
-    return false;
-}
-
-bool ADE7953::read32(uint16_t reg, uint32_t& value)
-{
-    if ((m_mode == M_UART) && (m_serial))
+    if (isSigned) 
     {
-        m_serial->flush();
-        m_serial->write(0x35);
-        m_serial->write(reg >> 8);
-        m_serial->write(reg & 0xff);
-        delay(1);
-        value = 0;
-        uint8_t cnt = 0;
-        uint64_t start = Time::nowRelativeMilli();
-        while(Time::nowRelativeMilli() < start + 500)
+        uint32_t signMask = 0;
+        if (size == 1) signMask = (1 << 7);
+        if (size == 2) signMask = (1 << 15);
+        if (size == 3) signMask = (1 << 23);
+        if (size == 4) signMask = (1 << 31);
+        if ((v & signMask) != 0) 
         {
-            while(m_serial->available())
-            {
-                value <<= 8;
-                value |= m_serial->read();
-                cnt++;
-                if (cnt == 4)
-                    return true;
-            }
+            v &= ~signMask;
+            v |= (1 << 31);
         }
     }
-    if ((m_mode == M_I2C) && (m_i2c))
-    {
-        m_i2c->beginTransmission(ADE_ADDRESS);
-        m_i2c->write(reg >> 8);
-        m_i2c->write(reg & 0xff);
-        if (m_i2c->endTransmission() == 0)
-        {
-            m_i2c->requestFrom(ADE_ADDRESS, (uint8_t)4);
-            value = 0;
-            if(m_i2c->available() >= 4)
-            {
-                value |= (uint32_t)m_i2c->read() << 24;
-                value |= (uint32_t)m_i2c->read() << 16;
-                value |= (uint32_t)m_i2c->read() << 8;
-                value |= (uint32_t)m_i2c->read();
-                return true;
-            }
-        }
-    }
-    Log::error("ADE7953", "Error reading 32 bit register %x", reg);
-    return false;
+    value = (int32_t)v;    
+    return true;
 }
 
 void ADE7953::process()
@@ -414,32 +406,66 @@ void ADE7953::process()
         {
             m_lastReadTimestamp = now;
             Log::verbose("ADE7953", "Values update");
-            uint16_t val16;
-            uint32_t val32;
-            if (read16(0x010A, val16))
-                setLastValue(0, (float)val16 / (0x7FFF / 100.0f));
-            if (read16(0x010B, val16))
-                setLastValue(1, (float)val16 / (0x7FFF / 100.0f));
-            if (read32(0x0310, val32))
-                setLastValue(2, (float)val32 / 154.0f);
-            if (read32(0x0311, val32))
-                setLastValue(3, (float)val32 / 154.0f);
-            if (read32(0x0312, val32))
-                setLastValue(4, (float)val32 / 154.0f);
-            if (read32(0x0313, val32))
-                setLastValue(5, (float)val32 / 154.0f);
-            if (read32(0x0314, val32))
-                setLastValue(6, (float)val32 / 154.0f);
-            if (read32(0x0315, val32))
-                setLastValue(7, (float)val32 / 154.0f);
-            if (read32(0x031A, val32))
-                setLastValue(8, (float)val32 / 100000.0f);
-            if (read32(0x031B, val32))
-                setLastValue(9, (float)val32 / 100000.0f);
-            if (read32(0x031C, val32))
-                setLastValue(10, (float)val32 / 26000.0f);
-            if (read32(0x010E, val32))
-                setLastValue(11, 223750.0f / (1 + (float)val32));
+            int32_t value;
+            // Power factor A
+            if (read(ADE_REG_PFA, false, value))
+            {
+                  // bit 15 is indicationg the sign and is part of the calculation
+                float pf = (value & (1 << 15)) ? /*negative sign*/ -(32767.0 / value) : /*positive sign*/ (value * 0.000030518);
+                setLastValue(0, pf);
+            }
+            // Power factor B
+            if (read(ADE_REG_PFB, false, value))
+            {
+                  // bit 15 is indicationg the sign and is part of the calculation
+                float pf = (value & (1 << 15)) ? /*negative sign*/ -(32767.0 / value) : /*positive sign*/ (value * 0.000030518);
+                setLastValue(1, pf);
+            }
+            // Active power A
+            if (read(ADE_REG_AWATT, true, value))
+            {
+                float watts = abs((float)value * m_config.apowerScale0);
+                setLastValue(2, watts);
+            }
+            // Active power B
+            if (read(ADE_REG_BWATT, true, value))
+            {
+                float watts = abs((float)value * m_config.apowerScale1);
+                setLastValue(3, watts);
+            }
+            // Current A
+            if (read(ADE_REG_IA, true, value))
+            {
+                float amperes = abs((float)value * m_config.currentScale0);
+                setLastValue(4, amperes);
+            }
+            // Current B
+            if (read(ADE_REG_IB, true, value))
+            {
+                float amperes = abs((float)value * m_config.currentScale1);
+                setLastValue(5, amperes);
+            }
+            // Energy A
+            if (read(ADE_REG_ANENERGYA, true, value)) 
+            {
+                float wh = (float)value * m_config.aenergyScale0;
+                setLastValue(6, wh);
+            }
+            // Energy B
+            if (read(ADE_REG_ANENERGYB, true, value)) 
+            {
+                float wh = (float)value * m_config.aenergyScale1;
+                setLastValue(7, wh);
+            }
+            // Voltage
+            if (read(ADE_REG_V, false, value))
+                setLastValue(8, (float)value * m_config.voltageScale);
+            // Frequency
+            if (read(ADE_REG_PERIOD, false, value))
+            {
+                float hertz = 223750.0f / ((float) value + 1);
+                setLastValue(9, hertz);
+            }
         }
     }
 }

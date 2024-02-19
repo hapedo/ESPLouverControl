@@ -79,6 +79,8 @@ PowerMeasDevice::ValueDescriptor PowerMeasDevice::createEmptyDescriptor()
     desc.lastValue = 0;
     desc.minValue = 0;
     desc.maxValue = 0;
+    desc.mqttTopic = "invalid";
+    desc.mqttPublish = true;
     return desc;
 }
 
@@ -87,7 +89,7 @@ void PowerMeasDevice::init()
 
 }
 
-void PowerMeasDevice::appendDescriptor(String description, String unit, String valueFormat)
+void PowerMeasDevice::appendDescriptor(String description, String unit, String valueFormat, String mqttTopic, bool mqttPublish)
 {
     ValueDescriptor desc;
     desc.index = m_descriptors.size();
@@ -97,6 +99,8 @@ void PowerMeasDevice::appendDescriptor(String description, String unit, String v
     desc.lastValue = 0;
     desc.minValue = 0;
     desc.maxValue = 0;
+    desc.mqttTopic = mqttTopic;
+    desc.mqttPublish = mqttPublish;
     m_descriptors.push_back(desc);
 }
 

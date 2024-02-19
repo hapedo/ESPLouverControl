@@ -117,6 +117,16 @@ void HttpServer::getConfig(WifiConfig& wifiConfig, String& ssidAp, String& passA
     passClient = inst.m_wifiPassword;
 }
 
+bool HttpServer::isApMode(bool respectClientModeSwap)
+{
+    HttpServer& inst = getInstance();
+    if (respectClientModeSwap)
+    {
+        return (inst.m_wifiConfig == WIFI_CONF_AP) || ((inst.m_wifiConfig == WIFI_CONF_CLIENT) && (inst.m_wifiClientModeSwap));
+    }
+    return inst.m_wifiConfig == WIFI_CONF_AP;
+}
+
 void HttpServer::initPrivate()
 {
     if (m_wifiConfig == WIFI_CONF_CLIENT)
@@ -196,6 +206,7 @@ void HttpServer::initPrivate()
         bool highKeyReset;
         bool keyResetPullEnabled;
         Module::getResetGpioConfig(pinKeyReset, highKeyReset, keyResetPullEnabled);
+        uint8_t pinLed = Module::getLedGpioConfig();
         String value;
         if (request->hasParam("downGpio", true))
         {
@@ -273,9 +284,14 @@ void HttpServer::initPrivate()
             else
                 keyResetPullEnabled = false;
         }
+        if (request->hasParam("ledGpio", true))
+        {
+            pinLed = request->getParam("ledGpio", true)->value().toInt();
+        }
         Louver::configureGpio(Louver::DIR_UP, pinKeyUp, relayUp, highKeyUp, highRelayUp, pinKeyUpPullEnabled);
         Louver::configureGpio(Louver::DIR_DOWN, pinKeyDown, relayDown, highKeyDown, highRelayDown, pinKeyDownPullEnabled);
         Module::setResetGpioConfig(pinKeyReset, highKeyReset, keyResetPullEnabled);
+        Module::setLedGpioConfig(pinLed);
         request->send_P(200, "text/html", getHttpConfigSaved(), defaultProcessor);
     });
     m_server.on("/movementConfig", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -407,6 +423,7 @@ void HttpServer::initPrivate()
         String clientId = Mqtt::getClientId();
         String user = Mqtt::getAuthenticationUser();
         String pass = Mqtt::getAuthenticationPassword();
+        uint32_t powerMeasPeriod = Mqtt::getPowerPublishPeriod();
         if (request->hasParam("enabled", true))
         {
             if (request->getParam("enabled", true)->value() == "1")
@@ -434,11 +451,16 @@ void HttpServer::initPrivate()
         {
             pass = request->getParam("brokerPass", true)->value();
         }        
+        if (request->hasParam("powerMeasPeriod", true)) 
+        {
+            powerMeasPeriod = (uint32_t)request->getParam("powerMeasPeriod", true)->value().toInt();
+        }
         Mqtt::setEnabled(enabled);
         Mqtt::setBrokerIp(brokerIp.c_str());
         Mqtt::setBrokerPort(brokerPort);
         Mqtt::setClientId(clientId.c_str());
         Mqtt::setAuthentication(user.c_str(), pass.c_str());
+        Mqtt::setPowerPublishPeriod(powerMeasPeriod);
         request->send_P(200, "text/html", getHttpConfigSaved(), defaultProcessor);
     });
     m_server.on("/powerMeasConfig", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -589,6 +611,7 @@ String HttpServer::gpioConfigProcessor(const String& var)
     bool highKeyReset;
     bool keyResetPullEnabled;
     Module::getResetGpioConfig(pinKeyReset, highKeyReset, keyResetPullEnabled);
+    uint8_t pinLed = Module::getLedGpioConfig();
     if (var == "KEY_DOWN_GPIO")
         return String(pinKeyDown);
     if (var == "KEY_UP_GPIO")
@@ -599,6 +622,8 @@ String HttpServer::gpioConfigProcessor(const String& var)
         return String(relayUp);
     if (var == "KEY_RESET_GPIO")
         return String(pinKeyReset);
+    if (var == "LED_GPIO")
+        return String(pinLed);
     if ((var == "SELECTED_UP_INVERTED_YES") && (!highKeyUp))
         return "selected";
     if ((var == "SELECTED_UP_INVERTED_NO") && (highKeyUp))
@@ -706,6 +731,8 @@ String HttpServer::mqttConfigProcessor(const String& var)
         return String(Mqtt::getAuthenticationUser());
     if (var == "MQTT_BROKER_PASS")
         return String(Mqtt::getAuthenticationPassword());
+    if (var == "MQTT_POWER_MEAS_PERIOD")
+        return htmlEscape(String(Mqtt::getPowerPublishPeriod()));
     return defaultProcessor(var);
 }
 

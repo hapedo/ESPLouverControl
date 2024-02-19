@@ -69,8 +69,14 @@ There is also web interface to control louver and configure firmware.
  - Telnet logging
  
 ## MQTT
-Following topics are implemented:
+Following subscribe topics are implemented:
  - CLIENT_ID/movement
+ 
+Following publish topics are implemented:
+ - CLIENT_ID/movement/status
+ - CLIENT_ID/key/up
+ - CLIENT_ID/key/down
+ - CLIENT_ID/power_meas/[depends on driver]
  
 ### CLIENT_ID/movement
 String values:
@@ -85,7 +91,7 @@ This project is under heavy development and it's still not finished.
 
 To do:
  - Export / import configuration
- - LED support
+
  
 
 

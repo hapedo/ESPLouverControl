@@ -16,6 +16,8 @@ public:
         float lastValue;
         float maxValue;
         float minValue;
+        String mqttTopic;
+        String mqttPublish;
     };
 
     PowerMeasDevice();
@@ -44,7 +46,7 @@ protected:
 
     ValueDescriptor createEmptyDescriptor();
 
-    void appendDescriptor(String description, String unit, String valueFormat);
+    void appendDescriptor(String description, String unit, String valueFormat, String mqttTopic, bool mqttPublish = true);
 
     void setLastValue(uint8_t index, float lastValue, bool updateMinMax = true);
 

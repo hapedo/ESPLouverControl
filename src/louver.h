@@ -134,4 +134,8 @@ private:
     uint64_t m_delayTimeout;
     std::vector<MovementStep> m_movement;
     uint64_t m_movementStartTime;
+    bool m_mqttKeyUpReported;
+    bool m_mqttKeyDownReported;
+    bool m_mqttKeyUpHoldReported;
+    bool m_mqttKeyDownHoldReported;
 };

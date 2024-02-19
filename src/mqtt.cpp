@@ -3,6 +3,7 @@
 #include "time.h"
 #include "log.h"
 #include "louver.h"
+#include "power_meas.h"
 
 Mqtt::Mqtt() :
     m_client(m_wifiClient),
@@ -12,7 +13,9 @@ Mqtt::Mqtt() :
     m_clientId(DEFAULT_CLIENT_ID),
     m_user(""),
     m_password(""),
-    m_lastReconnectTime(0)
+    m_powerPublishPeriod(DEFAULT_POWER_PUBLISH_PERIOD_MILLI),
+    m_lastReconnectTime(0),
+    m_lastPowerPublishTime(0)
 {
 
 }
@@ -26,6 +29,7 @@ void Mqtt::loadConfig()
     inst.m_clientId = Config::getString("mqtt/client_id", DEFAULT_CLIENT_ID);
     inst.m_user = Config::getString("mqtt/user", "");
     inst.m_password = Config::getString("mqtt/password", "");
+    inst.m_powerPublishPeriod = (uint32_t)Config::getInt("mqtt/power_period", DEFAULT_POWER_PUBLISH_PERIOD_MILLI);
     Log::info("MQTT", "Configuration loaded, broker=%s:%d, client ID=\"%s\", user=\"%s\"", inst.m_brokerIp.c_str(), inst.m_brokerPort, inst.m_clientId.c_str(), inst.m_user.c_str());
 }
 
@@ -104,6 +108,20 @@ String Mqtt::getAuthenticationPassword()
     return getInstance().m_password;
 }
 
+void Mqtt::setPowerPublishPeriod(uint32_t periodMilli)
+{
+    if (periodMilli < 1000)
+        periodMilli = 1000;
+    Log::info("MQTT", "Power measurement publish period set to %dms", periodMilli);
+    Config::setInt("mqtt/power_period", periodMilli);
+    Config::flush();
+    getInstance().m_powerPublishPeriod = periodMilli;
+}
+
+uint32_t Mqtt::getPowerPublishPeriod()
+{
+    return getInstance().m_powerPublishPeriod;
+}
 
 void Mqtt::reconnect()
 {
@@ -167,6 +185,26 @@ void Mqtt::mqttCallback(char* topic, byte* message, unsigned int length)
     }
 }
 
+void Mqtt::publishMovement(const char* value)
+{
+    Mqtt& inst = getInstance();
+    if (inst.m_enabled && inst.m_client.connected())
+    {
+        String topic = inst.m_clientId + "/movement/state";
+        inst.m_client.publish(topic.c_str(), value);
+    }
+}
+
+void Mqtt::publishKey(const char* key, const char* value)
+{
+    Mqtt& inst = getInstance();
+    if (inst.m_enabled && inst.m_client.connected())
+    {
+        String topic = inst.m_clientId + "/key/" + key;
+        inst.m_client.publish(topic.c_str(), value);
+    }
+}
+
 void Mqtt::process()
 {
     Mqtt& inst = getInstance();
@@ -179,6 +217,22 @@ void Mqtt::process()
             inst.m_lastReconnectTime = now;
             Log::info("MQTT", "Trying to reconnect");
             inst.reconnect();
+        }
+        if ((PowerMeas::getActiveDeviceType() != PowerMeas::DEV_NONE) && 
+            inst.m_client.connected() && 
+            (now >= inst.m_lastPowerPublishTime + inst.m_powerPublishPeriod))
+        {
+            inst.m_lastPowerPublishTime = now;
+            Log::debug("MQTT", "Publishing power measurement data");
+            ::std::vector<PowerMeasDevice::ValueDescriptor> descriptors = PowerMeas::getActiveDescriptors();
+            for(size_t i = 0; i < descriptors.size(); i++)
+            {
+                if (descriptors[i].mqttPublish)
+                {
+                    String topic = inst.m_clientId + "/power_meas/" + descriptors[i].mqttTopic;
+                    inst.m_client.publish(topic.c_str(), String(descriptors[i].lastValue).c_str());
+                }
+            }
         }
     }
 }

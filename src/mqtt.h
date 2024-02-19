@@ -16,6 +16,8 @@ public:
 
     static constexpr uint16_t DEFAULT_BROKER_PORT = 1883;
 
+    static constexpr uint32_t DEFAULT_POWER_PUBLISH_PERIOD_MILLI = 2000;
+
     static void loadConfig();
 
     static bool getEnabled();
@@ -39,6 +41,14 @@ public:
     static String getAuthenticationUser();
 
     static String getAuthenticationPassword();
+
+    static void setPowerPublishPeriod(uint32_t periodMilli);
+
+    static uint32_t getPowerPublishPeriod();
+
+    static void publishMovement(const char* value);
+
+    static void publishKey(const char* key, const char* value);
 
     static void process();
 
@@ -66,5 +76,7 @@ private:
     String m_clientId;
     String m_user;
     String m_password;
+    uint32_t m_powerPublishPeriod;
     uint64_t m_lastReconnectTime;
+    uint64_t m_lastPowerPublishTime;
 };

@@ -19,6 +19,10 @@ public:
 
     static void setResetGpioConfig(uint8_t pinKey, bool keyActiveHigh, bool keyPullEnabled);
 
+    static uint8_t getLedGpioConfig();
+
+    static void setLedGpioConfig(uint8_t pinLed);
+
     static void process();
 
     static void reboot();
@@ -46,6 +50,8 @@ private:
     bool m_pinKeyResetPullEnabled;
     bool m_lastKeyResetState;
     uint64_t m_lastKeyResetChangeTime;
+    uint8_t m_pinLed;
     bool m_reboot;
     uint64_t m_rebootTimeout;
+    uint64_t m_lastLedChangeTime;
 };

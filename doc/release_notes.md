@@ -1,4 +1,9 @@
 # Release notes
+## 0.0.3
+ - ADE7953 driver refactoring. Now works in I2C mode, UART still not working
+ - Status LED support added
+ - MQTT publish topics added for key and movement state, power measurement
+
 ## 0.0.2
  - Web interface now stored in FLASH (saving RAM, now really works with ESP8266)
  - OTA refactoring

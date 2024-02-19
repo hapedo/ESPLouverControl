@@ -42,6 +42,8 @@ public:
 
     static String exportActiveDescriptorsToJSON();
 
+    static ::std::vector<PowerMeasDevice::ValueDescriptor> getActiveDescriptors();
+
     static String getActiveConfiguration();
 
     static void setActiveConfiguration(String config);

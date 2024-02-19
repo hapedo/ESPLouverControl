@@ -3,6 +3,7 @@
 #include "log.h"
 #include "profiles.h"
 #include "time.h"
+#include "http_server.h"
 
 Module::Module() :
     m_name(DEFAULT_NAME),
@@ -11,8 +12,10 @@ Module::Module() :
     m_pinKeyResetPullEnabled(PROFILE_DEFAULT_KEY_PULL_ACTIVE),
     m_lastKeyResetState(false),
     m_lastKeyResetChangeTime(0),
+    m_pinLed(PROFILE_DEFAULT_PIN_LED),
     m_reboot(false),
-    m_rebootTimeout(0)
+    m_rebootTimeout(0),
+    m_lastLedChangeTime(0)
 {
     initPins();
 }
@@ -24,6 +27,7 @@ void Module::loadConfig()
     inst.m_pinKeyReset = Config::getInt("gpio/key_reset", PROFILE_DEFAULT_PIN_KEY_RESET);
     inst.m_pinKeyResetActiveHigh = Config::getBool("gpio/key_reset_active_high", PROFILE_DEFAULT_PIN_KEY_RESET_ACTIVE_HIGH);
     inst.m_pinKeyResetPullEnabled = Config::getBool("gpio/key_reset_pull_enabled", PROFILE_DEFAULT_KEY_PULL_ACTIVE);
+    inst.m_pinLed = Config::getInt("gpio/led", PROFILE_DEFAULT_PIN_LED);
     inst.initPins();
     Log::info("Module", "Configuration loaded, name=\"%s\"", inst.m_name.c_str());
 }
@@ -77,6 +81,21 @@ void Module::setResetGpioConfig(uint8_t pinKey, bool keyActiveHigh, bool keyPull
     Log::info("Module", "Reset key configuration, pin = %d", pinKey);
 }
 
+uint8_t Module::getLedGpioConfig()
+{
+    return getInstance().m_pinLed;
+}
+
+void Module::setLedGpioConfig(uint8_t pinLed)
+{
+    Module& inst = getInstance();
+    getInstance().m_pinLed = pinLed;
+    Config::setInt("gpio/led", inst.m_pinLed);
+    Config::flush();
+    inst.initPins();
+    Log::info("Module", "LED configuration, pin = %d", pinLed);
+}
+
 void Module::initPins()
 {
     uint8_t pull = INPUT_PULLUP;
@@ -91,6 +110,7 @@ void Module::initPins()
     if (!m_pinKeyResetPullEnabled)
         pull = 0;
     pinMode(m_pinKeyReset, INPUT | pull);
+    pinMode(m_pinLed, OUTPUT);
 }
 
 void Module::reboot()
@@ -130,5 +150,16 @@ void Module::process()
         Log::info("Module", "Reboot request - rebooting");
         delay(1000);
         ESP.restart();
+    }
+    uint32_t blinkPeriod = 2000;
+    if (HttpServer::isApMode())
+        blinkPeriod = 500;
+    if (now >= inst.m_lastLedChangeTime + blinkPeriod)
+    {
+        inst.m_lastLedChangeTime = now;
+        if (digitalRead(inst.m_pinLed) == HIGH)
+            digitalWrite(inst.m_pinLed, LOW);
+        else
+            digitalWrite(inst.m_pinLed, HIGH);
     }
 }

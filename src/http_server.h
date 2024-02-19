@@ -42,6 +42,8 @@ public:
 
     static void getConfig(WifiConfig& wifiConfig, String& ssidAp, String& passAp, String& ssidClient, String& passClient);
 
+    static bool isApMode(bool respectClientModeSwap = true);
+
     static void process();
 
     static String defaultProcessor(const String& var);

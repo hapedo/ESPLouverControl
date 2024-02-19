@@ -89,6 +89,10 @@
                     </select>
                     <label class="input_select_label" for="resetPull">Key reset GPIO pull resistor</label>
                 </div>
+                <div class="input">
+                    <input type="text" class="input_field" required name="ledGpio" id = "ledGpio" value="%LED_GPIO%"/>
+                    <label class="input_label" for="ledGpio">Status LED GPIO</label>
+                </div>
                 <button class="button" type="submit" form="gpioConfig" value="Submit">Save</button>
             </form>
             <form action="/settings" id="back">

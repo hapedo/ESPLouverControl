@@ -113,6 +113,14 @@ String PowerMeas::exportActiveDescriptorsToJSON()
     return "{\"power_meas\":[]}";
 }
 
+::std::vector<PowerMeasDevice::ValueDescriptor> PowerMeas::getActiveDescriptors()
+{
+    PowerMeas& inst = getInstance();
+    if (inst.m_activeDevice < inst.m_devices.size())
+        return inst.m_devices[inst.m_activeDevice]->getDescriptors();
+    return ::std::vector<PowerMeasDevice::ValueDescriptor>();
+}
+
 String PowerMeas::getActiveConfiguration()
 {
     PowerMeas& inst = getInstance();

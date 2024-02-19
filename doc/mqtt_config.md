@@ -21,4 +21,7 @@ Username to be used to connect to MQTT broker
 ## Password
 Password to be used to connect to MQTT broker
 
+## Power meas. publish period
+Power measurement topics publish perion in milliseconds (1000 is minimum)
+
 [Main page](../README.md)

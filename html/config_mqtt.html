@@ -40,6 +40,10 @@
                     <input type="password" class="input_field" name="brokerPass" id = "brokerPass" value="%MQTT_BROKER_PASS%"/>
                     <label class="input_label" for="brokerPass">Password</label>
                 </div>
+                <div class="input">
+                    <input type="text" class="input_field" name="powerMeasPeriod" id = "powerMeasPeriod" value="%MQTT_POWER_MEAS_PERIOD%"/>
+                    <label class="input_label" for="powerMeasPeriod">Power meas. publish perid [ms]</label>
+                </div>
                 <button class="button" type="submit" form="mqttConfig" value="Submit">Save</button>
             </form>
             <form action="/settings" id="back">

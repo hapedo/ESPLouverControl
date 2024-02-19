@@ -4,6 +4,7 @@
 #include "log.h"
 #include "config.h"
 #include "power_meas.h"
+#include "mqtt.h"
 
 Louver::Louver() :
     m_lastKeyUpState(false),
@@ -15,7 +16,11 @@ Louver::Louver() :
     m_state(ST_IDLE),
     m_closePercent(0),
     m_keyUpReleased(false),
-    m_keyDownReleased(false)
+    m_keyDownReleased(false),
+    m_mqttKeyUpReported(false),
+    m_mqttKeyDownReported(false),
+    m_mqttKeyUpHoldReported(false),
+    m_mqttKeyDownHoldReported(false)
 {
     setDefaultsPrivate();
 }
@@ -186,6 +191,7 @@ void Louver::fullOpen()
     step.checkConditions = true;
     inst.m_movement.clear();
     inst.m_movement.push_back(step);
+    Mqtt::publishMovement("open");
     Log::info("Louver", "Full open movement");
     inst.startMovement();
 }
@@ -199,6 +205,7 @@ void Louver::fullClose()
     step.checkConditions = true;
     inst.m_movement.clear();
     inst.m_movement.push_back(step);
+    Mqtt::publishMovement("close");
     Log::info("Louver", "Full close movement");
     inst.startMovement();
 }
@@ -214,6 +221,7 @@ void Louver::shortOpen(float timeSecs)
     step.checkConditions = false;
     inst.m_movement.clear();
     inst.m_movement.push_back(step);
+    Mqtt::publishMovement("up");
     Log::info("Louver", "Short open movement, time %f seconds", timeSecs);
     inst.startMovement();
 }
@@ -229,6 +237,7 @@ void Louver::shortClose(float timeSecs)
     step.checkConditions = false;
     inst.m_movement.clear();
     inst.m_movement.push_back(step);
+    Mqtt::publishMovement("down");
     Log::info("Louver", "Short close movement, time %f seconds", timeSecs);
     inst.startMovement();
 }
@@ -247,6 +256,7 @@ void Louver::fullCloseAndOpenLamellas()
     step.timeMilli = inst.m_timeOpenLamellas;
     step.checkConditions = false;
     inst.m_movement.push_back(step);
+    Mqtt::publishMovement("close_open_lamellas");
     Log::info("Louver", "Full close and open lamellas movement");
     inst.startMovement();
 }
@@ -400,6 +410,7 @@ void Louver::process()
     if (!inst.m_keyDownActiveHigh)
         isKeyDownActive = !isKeyDownActive;
     uint64_t now = Time::nowRelativeMilli();
+
     if (isKeyUpActive != inst.m_lastKeyUpState)
     {
         inst.m_lastKeyUpState = isKeyUpActive;
@@ -416,17 +427,71 @@ void Louver::process()
     bool isDownPressDebounced = (now - inst.m_lastKeyDownChangeTime) >= DEBOUNCE_PRESS_MILLI;
     bool isDownHoldDebounced = (now - inst.m_lastKeyDownChangeTime) >= DEBOUNCE_HOLD_MILLI;
 
+    if (!inst.m_mqttKeyUpReported)
+    {
+        if (isKeyUpActive && isUpPressDebounced)
+        {
+            Mqtt::publishKey("up", "active");
+            inst.m_mqttKeyUpReported = true;
+        }
+    }
+    else
+    {
+        if (!isKeyUpActive && isUpPressDebounced)
+        {
+            Mqtt::publishKey("up", "inactive");
+            inst.m_mqttKeyUpReported = false;
+            inst.m_mqttKeyUpHoldReported = false;
+        }
+    }
+    if (!inst.m_mqttKeyUpHoldReported)
+    {
+        if (isKeyUpActive && isUpHoldDebounced)
+        {
+            Mqtt::publishKey("up", "hold");
+            inst.m_mqttKeyUpHoldReported = true;
+        }
+    }
+
+    if (!inst.m_mqttKeyDownReported)
+    {
+        if (isKeyDownActive && isDownPressDebounced)
+        {
+            Mqtt::publishKey("down", "active");
+            inst.m_mqttKeyDownReported = true;
+        }
+    }
+    else
+    {
+        if (!isKeyDownActive && isDownPressDebounced)
+        {
+            Mqtt::publishKey("down", "inactive");
+            inst.m_mqttKeyDownReported = false;
+            inst.m_mqttKeyDownHoldReported = false;
+        }
+    }
+    if (!inst.m_mqttKeyDownHoldReported)
+    {
+        if (isKeyDownActive && isDownHoldDebounced)
+        {
+            Mqtt::publishKey("down", "hold");
+            inst.m_mqttKeyDownHoldReported = true;
+        }
+    }    
+
     switch(inst.m_state)
     {
         case ST_IDLE:
             if (isKeyUpActive && isUpPressDebounced)
             {
                 inst.m_state = ST_UP;
+                Mqtt::publishMovement("up");
                 Log::info("Louver", "Up pressed");
             }
             else if (isKeyDownActive && isDownPressDebounced)
             {
                 inst.m_state = ST_DOWN;
+                Mqtt::publishMovement("down");
                 Log::info("Louver", "Down pressed");
             }
             break;
@@ -434,6 +499,7 @@ void Louver::process()
             if (!isKeyUpActive && isUpPressDebounced)
             {
                 Log::info("Louver", "Up released");
+                Mqtt::publishMovement("stop");
                 inst.delay(ST_IDLE);
                 break;
             }
@@ -447,6 +513,7 @@ void Louver::process()
             if (!isKeyDownActive && isDownPressDebounced)
             {
                 Log::info("Louver", "Down released");
+                Mqtt::publishMovement("stop");
                 inst.delay(ST_IDLE);
                 break;
             }
@@ -529,6 +596,7 @@ void Louver::process()
             {
                 inst.m_state = ST_IDLE;
                 Log::info("Louver", "All keys released");
+                Mqtt::publishMovement("stop");
             }
             break;
         case ST_DELAY:

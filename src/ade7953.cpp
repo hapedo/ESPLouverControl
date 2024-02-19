@@ -56,16 +56,16 @@ ADE7953::ADE7953(Mode mode) :
     m_serial(nullptr),
     m_lastReadTimestamp(0)
 {
-    appendDescriptor("Power factor 1", "%", ".0f");
-    appendDescriptor("Power factor 2", "%", ".0f");
-    appendDescriptor("Active power 1", "W", ".0f");
-    appendDescriptor("Active power 2", "W", ".0f");
-    appendDescriptor("Current 1", "A", ".3f");
-    appendDescriptor("Current 2", "A", ".3f");
-    appendDescriptor("Energy 1", "Wh", ".3f");
-    appendDescriptor("Energy 2", "Wh", ".3f");
-    appendDescriptor("Voltage", "V", ".0f");
-    appendDescriptor("Frequency", "Hz", ".0f");
+    appendDescriptor("Power factor 1", "%", ".0f", "power_factor1");
+    appendDescriptor("Power factor 2", "%", ".0f", "power_factor2");
+    appendDescriptor("Active power 1", "W", ".0f", "active_power1");
+    appendDescriptor("Active power 2", "W", ".0f", "active_power2");
+    appendDescriptor("Current 1", "A", ".3f", "current1");
+    appendDescriptor("Current 2", "A", ".3f", "current2");
+    appendDescriptor("Energy 1", "Wh", ".3f", "energy1");
+    appendDescriptor("Energy 2", "Wh", ".3f", "energy2");
+    appendDescriptor("Voltage", "V", ".0f", "voltage");
+    appendDescriptor("Frequency", "Hz", ".0f", "frequency");
 
     // Default config
     m_config.voltageScale = .0000382602;

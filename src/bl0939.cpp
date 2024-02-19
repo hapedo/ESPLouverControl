@@ -43,14 +43,14 @@ BL0939::BL0939() :
     m_refreshPeriod(PROFILE_DEFAULT_BL0939_PERIOD_MILLI),
     m_packetIndex(0)
 {
-    appendDescriptor("Voltage RMS", "V", ".0f");
-    appendDescriptor("Current 1 RMS", "A", ".3f");
-    appendDescriptor("Current 2 RMS", "A", ".3f");
-    appendDescriptor("Power 1", "W", ".3f");
-    appendDescriptor("Power 2", "W", ".3f");
-    appendDescriptor("Energy 1", "Wh", ".0f");
-    appendDescriptor("Energy 2", "Wh", ".0f");
-    appendDescriptor("Total energy", "Wh", ".0f");
+    appendDescriptor("Voltage RMS", "V", ".0f", "voltage");
+    appendDescriptor("Current 1 RMS", "A", ".3f", "current1");
+    appendDescriptor("Current 2 RMS", "A", ".3f", "current2");
+    appendDescriptor("Power 1", "W", ".3f", "power1");
+    appendDescriptor("Power 2", "W", ".3f", "power2");
+    appendDescriptor("Energy 1", "Wh", ".0f", "energy1");
+    appendDescriptor("Energy 2", "Wh", ".0f", "energy2");
+    appendDescriptor("Total energy", "Wh", ".0f", "total_energy");
 }
 
 String BL0939::getChipInfo() const

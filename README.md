@@ -27,7 +27,7 @@ specific to louvers (not the same as blinds and curtains). Louvers require speci
 
 [Network config](doc/network_config.md)
 
-[MQTT config](doc/mqtt_config.md)
+[MQTT config and usage](doc/mqtt_config.md)
 
 [Power measurement config](doc/power_meas_config.md)
 
@@ -77,14 +77,8 @@ Following publish topics are implemented:
  - CLIENT_ID/key/up
  - CLIENT_ID/key/down
  - CLIENT_ID/power_meas/[depends on driver]
- 
-### CLIENT_ID/movement
-String values:
- - up - short open movement
- - down - short close movement
- - open - full open movement
- - close - full close movement
- - close_open_lamellas - full close and open lamellas movement
+
+See [MQTT config and usage](doc/mqtt_config.md) for details. 
 
 ## Important notes
 This project is under heavy development and it's still not finished.

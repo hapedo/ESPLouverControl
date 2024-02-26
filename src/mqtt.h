@@ -50,6 +50,8 @@ public:
 
     static void publishKey(const char* key, const char* value);
 
+    static void publishPosition(uint8_t position);
+
     static void process();
 
 private:

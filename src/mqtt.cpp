@@ -182,6 +182,11 @@ void Mqtt::mqttCallback(char* topic, byte* message, unsigned int length)
             Log::info("MQTT", "Full close and open lamellas movement requested");
             Louver::fullCloseAndOpenLamellas();
         }
+        else if (messageStr == "stop")
+        {
+            Log::info("MQTT", "Stop movement requested");
+            Louver::stop();
+        }
     }
 }
 
@@ -205,6 +210,16 @@ void Mqtt::publishKey(const char* key, const char* value)
     }
 }
 
+void Mqtt::publishPosition(uint8_t position)
+{
+    Mqtt& inst = getInstance();
+    if (inst.m_enabled && inst.m_client.connected())
+    {
+        String topic = inst.m_clientId + "/movement/position";
+        inst.m_client.publish(topic.c_str(), String(position).c_str());
+    }
+}
+
 void Mqtt::process()
 {
     Mqtt& inst = getInstance();
@@ -225,12 +240,21 @@ void Mqtt::process()
             inst.m_lastPowerPublishTime = now;
             Log::debug("MQTT", "Publishing power measurement data");
             ::std::vector<PowerMeasDevice::ValueDescriptor> descriptors = PowerMeas::getActiveDescriptors();
+            String topic = inst.m_clientId + "/power_meas/count";
+            inst.m_client.publish(topic.c_str(), String(descriptors.size()).c_str());
             for(size_t i = 0; i < descriptors.size(); i++)
             {
                 if (descriptors[i].mqttPublish)
                 {
-                    String topic = inst.m_clientId + "/power_meas/" + descriptors[i].mqttTopic;
+                    topic = inst.m_clientId + "/power_meas/" + descriptors[i].mqttTopic;
                     inst.m_client.publish(topic.c_str(), String(descriptors[i].lastValue).c_str());
+                    topic = inst.m_clientId + "/power_meas/" + String(i);
+                    String value = "{ \"description\":\"" + descriptors[i].description + "\"," +
+                        "\"mqtt\":\"" + descriptors[i].mqttTopic + "\"," +
+                        "\"unit\":\"" + descriptors[i].unit + "\","+
+                        "\"format\":\"" + descriptors[i].valueFormat + "\","+
+                        "\"value\":" + descriptors[i].lastValue + "}";
+                    inst.m_client.publish(topic.c_str(), value.c_str());
                 }
             }
         }

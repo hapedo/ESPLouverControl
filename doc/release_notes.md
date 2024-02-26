@@ -1,4 +1,9 @@
 # Release notes
+## 0.0.4
+ - Added stop MQTT movement request
+ - Estimating louver position and publising using movement/louver
+ - Publishing JSON formatted power measurement MQTT
+ 
 ## 0.0.3
  - ADE7953 driver refactoring. Now works in I2C mode, UART still not working
  - Status LED support added

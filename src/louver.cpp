@@ -20,8 +20,11 @@ Louver::Louver() :
     m_mqttKeyUpReported(false),
     m_mqttKeyDownReported(false),
     m_mqttKeyUpHoldReported(false),
-    m_mqttKeyDownHoldReported(false)
+    m_mqttKeyDownHoldReported(false),
+    m_lastPositionReportTime(0),
+    m_lastPositionUpdateTime(0)
 {
+    m_position = 0;
     setDefaultsPrivate();
 }
 
@@ -53,6 +56,7 @@ void Louver::setDefaultsPrivate()
     m_timeShortMovement = (uint32_t)(DEFAULT_TIME_SHORT_MOVEMENT_SECS * 1000);
     m_stopUpOnPowerCond1 = false;
     m_stopDownOnPowerCond2 = false;
+    recalculatePercents();
     initPins();
     Log::info("Louver", "Defaults set");
 }
@@ -75,6 +79,7 @@ void Louver::loadConfigPrivate()
     m_timeShortMovement = (uint32_t)(Config::getFloat("timing/short_movement", DEFAULT_TIME_SHORT_MOVEMENT_SECS) * 1000);
     m_stopUpOnPowerCond1 = Config::getBool("timing/stop_up_on_power_cond_1", false);
     m_stopDownOnPowerCond2 = Config::getBool("timing/stop_down_on_power_cond_2", false);
+    recalculatePercents();
     initPins();
     Log::info("Louver", "Configuration loaded");
 }
@@ -149,6 +154,7 @@ void Louver::configureTimes(float timeFullOpenSecs, float timeFullCloseSecs, flo
     inst.m_timeShortMovement = (uint32_t)(shortMovementSecs * 1000);
     Config::setFloat("timing/short_movement", shortMovementSecs);
     Config::flush();
+    inst.recalculatePercents();
     Log::info("Louver", "Timing set, full open=%f s, full close=%f s, short=%f s, open lamellas=%f s", timeFullOpenSecs, timeFullCloseSecs, shortMovementSecs, timeOpenLamellasSecs);
 }
 
@@ -345,6 +351,42 @@ void Louver::updateRelays()
     }
 }
 
+void Louver::recalculatePercents()
+{
+    if (m_timeUp != 0)
+        m_percentPerMilliUp = (float)100 / (float)m_timeUp;
+    else
+        m_percentPerMilliUp = 0;
+    if (m_timeDown != 0)
+        m_percentPerMilliDown = (float)100 / (float)m_timeDown;
+    else
+        m_percentPerMilliDown = 0;
+}
+
+void Louver::updatePosition(Direction direction)
+{
+    uint64_t now = Time::nowRelativeMilli();
+    if (m_lastPositionUpdateTime == 0)
+        m_lastPositionUpdateTime = now;
+    uint64_t delta = now - m_lastPositionUpdateTime;
+    if (delta >= POSITION_UPDATE_PERIOD_MILLI)
+    {
+        m_lastPositionUpdateTime = now;
+        if (direction == DIR_UP)
+        {
+            m_position -= (float)delta * m_percentPerMilliUp;
+            if (m_position < 0)
+                m_position = 0;
+        }
+        else if (direction == DIR_DOWN)
+        {
+            m_position += (float)delta * m_percentPerMilliDown;
+            if (m_position > 100)
+                m_position = 100;
+        }
+    }
+}
+
 void Louver::relaysUp()
 {
     if (m_relayDownActiveHigh)
@@ -384,6 +426,7 @@ void Louver::relaysIdle()
 void Louver::startMovement()
 {
     m_movementStartTime = Time::nowRelativeMilli();
+    m_lastPositionUpdateTime = 0;
     m_keyUpReleased = false;
     m_keyDownReleased = false;
     m_state = ST_MOVEMENT;
@@ -485,17 +528,22 @@ void Louver::process()
             if (isKeyUpActive && isUpPressDebounced)
             {
                 inst.m_state = ST_UP;
+                inst.m_lastPositionUpdateTime = 0;
+                inst.updatePosition(DIR_UP);
                 Mqtt::publishMovement("up");
                 Log::info("Louver", "Up pressed");
             }
             else if (isKeyDownActive && isDownPressDebounced)
             {
                 inst.m_state = ST_DOWN;
+                inst.m_lastPositionUpdateTime = 0;
+                inst.updatePosition(DIR_DOWN);
                 Mqtt::publishMovement("down");
                 Log::info("Louver", "Down pressed");
             }
             break;
         case ST_UP:
+            inst.updatePosition(DIR_UP);
             if (!isKeyUpActive && isUpPressDebounced)
             {
                 Log::info("Louver", "Up released");
@@ -510,6 +558,7 @@ void Louver::process()
             }
             break;
         case ST_DOWN:
+            inst.updatePosition(DIR_DOWN);
             if (!isKeyDownActive && isDownPressDebounced)
             {
                 Log::info("Louver", "Down released");
@@ -561,21 +610,35 @@ void Louver::process()
                     inst.delay(ST_WAIT_RELEASE);
                     break;
                 }
+                else
+                {
+                    inst.updatePosition(inst.m_movement[index].direction);
+                }
                 // Stop conditions check
                 bool stopFlag = false;
                 if (inst.m_stopUpOnPowerCond1 && inst.m_movement[index].checkConditions && (inst.m_movement[index].direction == DIR_UP) && upCond)
                 {
                     stopFlag = true;
+                    inst.m_position = 0;
                     Log::info("Louver", "Stop condition 1 satisfied, stopping movement");
                 }
                 if (inst.m_stopDownOnPowerCond2 && inst.m_movement[index].checkConditions && (inst.m_movement[index].direction == DIR_DOWN) && downCond)
                 {
                     stopFlag = true;
+                    inst.m_position = 100;
                     Log::info("Louver", "Stop condition 2 satisfied, stopping movement");
                 }
                 // Time check
                 if (stopFlag || (now >= inst.m_movementStartTime + inst.m_movement[index].timeMilli))
                 {
+                    if (!stopFlag && (inst.m_movement.size() == 1))
+                    {
+                        // Check just for single direction movement
+                        if (inst.m_movement[index].direction == DIR_UP)
+                            inst.m_position = 0;
+                        else if (inst.m_movement[index].direction == DIR_DOWN)
+                            inst.m_position = 100;
+                    }
                     inst.m_stepIndex++;
                     inst.m_movementStartTime = now;
                     PowerMeas::resetAllConditions();
@@ -606,6 +669,13 @@ void Louver::process()
                 inst.m_state = inst.m_nextState;
             }
             break;
+    }
+
+    if ((now - inst.m_lastPositionReportTime) > POSITION_REPORT_PERIOD_MILLI)
+    {
+        inst.m_lastPositionReportTime = now;
+        Log::debug("Louver", "Position: %d %", inst.m_position);
+        Mqtt::publishPosition((uint8_t)inst.m_position);
     }
     inst.updateRelays();
 }

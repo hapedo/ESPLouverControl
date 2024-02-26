@@ -74,6 +74,7 @@ Following subscribe topics are implemented:
  
 Following publish topics are implemented:
  - CLIENT_ID/movement/status
+ - CLIENT_ID/movement/position
  - CLIENT_ID/key/up
  - CLIENT_ID/key/down
  - CLIENT_ID/power_meas/[depends on driver]

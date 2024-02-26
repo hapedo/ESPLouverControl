@@ -70,6 +70,8 @@ private:
     static constexpr uint64_t DEBOUNCE_PRESS_MILLI = 50;
     static constexpr uint64_t DEBOUNCE_HOLD_MILLI = 2000; 
     static constexpr uint32_t MOVEMENT_DELAY_MILLI = 200;
+    static constexpr uint32_t POSITION_REPORT_PERIOD_MILLI = 1000;
+    static constexpr uint32_t POSITION_UPDATE_PERIOD_MILLI = 10;
 
     enum State
     {
@@ -95,6 +97,10 @@ private:
 
     void updateRelays();
 
+    void recalculatePercents();
+
+    void updatePosition(Direction direction);
+
     void relaysUp();
 
     void relaysDown();
@@ -105,6 +111,7 @@ private:
 
     void delay(State nextState);
 
+    float m_position;
     uint8_t m_pinKeyUp;
     uint8_t m_pinKeyDown;
     uint8_t m_pinRelayUp;
@@ -138,4 +145,8 @@ private:
     bool m_mqttKeyDownReported;
     bool m_mqttKeyUpHoldReported;
     bool m_mqttKeyDownHoldReported;
+    float m_percentPerMilliUp;
+    float m_percentPerMilliDown;
+    uint64_t m_lastPositionReportTime;
+    uint64_t m_lastPositionUpdateTime;
 };

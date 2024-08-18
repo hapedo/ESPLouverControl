@@ -1,4 +1,7 @@
 # Release notes
+## 0.0.5
+ - Wifi hostname support added
+
 ## 0.0.4
  - Added stop MQTT movement request
  - Estimating louver position and publising using movement/louver

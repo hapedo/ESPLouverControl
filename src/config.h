@@ -5,7 +5,7 @@ class Config
 {
 public:
 
-    static constexpr const char* VERSION = "0.0.4";
+    static constexpr const char* VERSION = "0.0.5";
 
     static constexpr size_t MAX_JSON_SIZE = 2048;
 

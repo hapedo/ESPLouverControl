@@ -56,6 +56,7 @@ HttpServer::HttpServer() :
     m_wifiPasswordAp(DEFAULT_PASSWORD_AP),
     m_wifiSsid(DEFAULT_SSID),
     m_wifiPassword(DEFAULT_PASSWORD),
+    m_hostname("Hostname"),
     m_lastWifiStatus(WL_CONNECTED)
 {
 
@@ -89,25 +90,29 @@ void HttpServer::setWifiClientBehavior(WifiClientBehavior behavior)
     Config::flush();
 }
 
-void HttpServer::configureAP(const char* ssid, const char* password)
+void HttpServer::configureAP(const char* ssid, const char* password, const char* hostname)
 {
     getInstance().m_wifiSsidAp = String(ssid);
     Config::setString("network/ssid_ap", getInstance().m_wifiSsidAp);
     getInstance().m_wifiPasswordAp = String(password);
     Config::setString("network/password_ap", getInstance().m_wifiPasswordAp);
+    getInstance().m_hostname = String(hostname);
+    Config::setString("network/hostname", getInstance().m_hostname);
     Config::flush();
 }
 
-void HttpServer::configureClient(const char* ssid, const char* password)
+void HttpServer::configureClient(const char* ssid, const char* password, const char* hostname)
 {
     getInstance().m_wifiSsid = String(ssid);
     Config::setString("network/ssid", getInstance().m_wifiSsid);
     getInstance().m_wifiPassword = String(password);
     Config::setString("network/password", getInstance().m_wifiPassword);
+    getInstance().m_hostname = String(hostname);
+    Config::setString("network/hostname", getInstance().m_hostname);
     Config::flush();
 }
 
-void HttpServer::getConfig(WifiConfig& wifiConfig, String& ssidAp, String& passAp, String& ssidClient, String& passClient)
+void HttpServer::getConfig(WifiConfig& wifiConfig, String& ssidAp, String& passAp, String& ssidClient, String& passClient, String& hostname)
 {
     HttpServer& inst = getInstance();
     wifiConfig = inst.m_wifiConfig;
@@ -115,6 +120,7 @@ void HttpServer::getConfig(WifiConfig& wifiConfig, String& ssidAp, String& passA
     passAp = inst.m_wifiPasswordAp;
     ssidClient = inst.m_wifiSsid;
     passClient = inst.m_wifiPassword;
+    hostname = inst.m_hostname;
 }
 
 bool HttpServer::isApMode(bool respectClientModeSwap)
@@ -356,7 +362,8 @@ void HttpServer::initPrivate()
         String passAp;
         String ssid;
         String pass;
-        getInstance().getConfig(oldWifiConfig, ssidAp, passAp, ssid, pass);
+        String host;
+        getInstance().getConfig(oldWifiConfig, ssidAp, passAp, ssid, pass, host);
         wifiConfig = oldWifiConfig;
         String mdnsHost = Mdns::getHost();
         WifiClientBehavior clientBehavior = getInstance().m_wifiClientBehavior;
@@ -385,6 +392,10 @@ void HttpServer::initPrivate()
         {
             pass = request->getParam("clientPass", true)->value();
         }
+        if (request->hasParam("Host", true)) 
+        {
+            host = request->getParam("Host", true)->value();
+        }
         if (request->hasParam("mDNSHost", true)) 
         {
             mdnsHost = request->getParam("mDNSHost", true)->value();
@@ -401,11 +412,12 @@ void HttpServer::initPrivate()
             telnetLoggingEnabled = request->getParam("telnetLoggingEnabled", true)->value() == "1";
         }
         Module::reboot();
-        configureAP(ssidAp.c_str(), passAp.c_str());
-        configureClient(ssid.c_str(), pass.c_str());
+        configureAP(ssidAp.c_str(), passAp.c_str(), host.c_str());
+        configureClient(ssid.c_str(), pass.c_str(), host.c_str());
         setWifiConfig(wifiConfig);
         setWifiClientBehavior(clientBehavior);
         Mdns::configure(mdnsHost);
+        WiFi.setHostname(host.c_str());
         Log::setTelnetLoggingEnabled(telnetLoggingEnabled);
         Log::info("HTTP", "Network config changed - requesting reboot");    
         request->send_P(200, "text/html", getHttpNetworkConfigSaved(), defaultProcessor);
@@ -551,6 +563,7 @@ void HttpServer::initAsAccessPoint()
 {
     //WiFi.mode(WIFI_AP);
     //WiFi.enableAP(true);
+    WiFi.setHostname(m_hostname.c_str());
     WiFi.mode(WIFI_AP);
     delay(100);
     WiFi.softAP(m_wifiSsidAp, m_wifiPasswordAp);
@@ -561,6 +574,7 @@ void HttpServer::initAsAccessPoint()
 void HttpServer::initAsClient()
 {
     Log::info("HTTP", "Initializing as client, trying to connect to %s", m_wifiSsid.c_str());
+    WiFi.setHostname(m_hostname.c_str());
     WiFi.mode(WIFI_STA);
     WiFi.begin(m_wifiSsid, m_wifiPassword);
 }
@@ -574,6 +588,7 @@ void HttpServer::loadConfigPrivate()
     m_wifiPasswordAp = Config::getString("network/password_ap", DEFAULT_PASSWORD_AP);
     m_wifiSsid = Config::getString("network/ssid", DEFAULT_SSID);
     m_wifiPassword = Config::getString("network/password", DEFAULT_PASSWORD);
+    m_hostname = Config::getString("network/hostname", WiFi.getHostname());
     Log::info("HTTP", "Configuration loaded");
 }
 
@@ -702,6 +717,8 @@ String HttpServer::networkConfigProcessor(const String& var)
         return htmlEscape(getInstance().m_wifiSsid);
     if (var == "NETWORK_PASS")
         return htmlEscape(getInstance().m_wifiPassword);
+    if (var == "NETWORK_HOST")
+        return WiFi.getHostname();
     if (var == "NETWORK_MDNS_HOST")
         return Mdns::getHost();
     if ((var == "SELECTED_CLIENT_BEHAVIOR_0") && (getInstance().m_wifiClientBehavior == WIFI_CLIENT_BEH_1MCLIENT_5MAP))

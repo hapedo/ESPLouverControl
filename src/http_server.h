@@ -36,11 +36,11 @@ public:
 
     static void setWifiClientBehavior(WifiClientBehavior behavior);
 
-    static void configureAP(const char* ssid, const char* password);
+    static void configureAP(const char* ssid, const char* password, const char* hostname);
 
-    static void configureClient(const char* ssid, const char* password);
+    static void configureClient(const char* ssid, const char* password, const char* hostname);
 
-    static void getConfig(WifiConfig& wifiConfig, String& ssidAp, String& passAp, String& ssidClient, String& passClient);
+    static void getConfig(WifiConfig& wifiConfig, String& ssidAp, String& passAp, String& ssidClient, String& passClient, String& hostname);
 
     static bool isApMode(bool respectClientModeSwap = true);
 
@@ -90,6 +90,7 @@ private:
     String m_wifiPasswordAp;
     String m_wifiSsid;
     String m_wifiPassword;
+    String m_hostname;
     int m_lastWifiStatus;
     uint64_t m_nextReconnectTime;
     uint64_t m_wifiClientSwapTimeout;

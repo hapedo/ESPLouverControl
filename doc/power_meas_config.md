@@ -9,6 +9,7 @@ Driver to be used to measure power. Following drivers are supported:
  - Disabled = Power measurement disabled
  - BL0939 (UART)
  - ADE7953 (I2C or UART)
+ - CSE7761 (UART)
 
 ## Stop condition 1
 Full open movement condition. Full open movement is stopped when power condition 1
@@ -97,6 +98,20 @@ Where:
  - rx_gpio is RX pin GPIO index
  - tx_gpio is TX pin GPIO index
  - reset_gpio is RESET pin GPIO index
+ - refresh_period_milli is power measurement value update period in milliseconds
+ 
+## CSE7761 configuration
+CSE7761 driver configuration string.
+
+Format (JSON):
+```json
+{"serial":1,"rx_gpio":26,"tx_gpio":25,"refresh_period_milli":500}
+```
+
+Where:
+ - serial is UART peripheral index (0 = UART0, 1 = UART1, ...)
+ - rx_gpio is RX pin GPIO index
+ - tx_gpio is TX pin GPIO index
  - refresh_period_milli is power measurement value update period in milliseconds
 
 [Main page](../README.md)

@@ -10,6 +10,8 @@ public:
 
     static uint64_t nowRelativeMilli();
 
+    static void process();
+
 private:
 
     Time();

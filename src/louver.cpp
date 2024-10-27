@@ -674,7 +674,7 @@ void Louver::process()
     if ((now - inst.m_lastPositionReportTime) > POSITION_REPORT_PERIOD_MILLI)
     {
         inst.m_lastPositionReportTime = now;
-        Log::debug("Louver", "Position: %d %", inst.m_position);
+        Log::debug("Louver", "Position: %d %%", (int)inst.m_position);
         Mqtt::publishPosition((uint8_t)inst.m_position);
     }
     inst.updateRelays();

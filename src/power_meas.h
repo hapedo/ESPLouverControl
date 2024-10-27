@@ -11,7 +11,8 @@ public:
     {
         DEV_NONE = 0,
         DEV_BL0939,
-        DEV_ADE7953
+        DEV_ADE7953,
+        DEV_CSE7761
     };
 
     enum Comparator

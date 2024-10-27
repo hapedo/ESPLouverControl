@@ -1,4 +1,9 @@
 # Release notes
+## 0.0.6
+ - timestamp overflow bugfix (may cause power measurement and movement malfunction)
+ - NTP sync on wifi connect bugfix
+ - CSE7761 power measurement support added (Sonoff Dual R3 v1.x)
+ 
 ## 0.0.5
  - Wifi hostname support added
 

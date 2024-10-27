@@ -44,6 +44,8 @@ public:
 
     static bool isApMode(bool respectClientModeSwap = true);
 
+    static bool isWifiConnected();
+
     static void process();
 
     static String defaultProcessor(const String& var);

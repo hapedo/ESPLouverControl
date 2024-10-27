@@ -133,6 +133,12 @@ bool HttpServer::isApMode(bool respectClientModeSwap)
     return inst.m_wifiConfig == WIFI_CONF_AP;
 }
 
+bool HttpServer::isWifiConnected()
+{
+    HttpServer& inst = getInstance();
+    return (inst.m_wifiConfig == WIFI_CONF_CLIENT) && (inst.m_lastWifiStatus == WL_CONNECTED);
+}
+
 void HttpServer::initPrivate()
 {
     if (m_wifiConfig == WIFI_CONF_CLIENT)
@@ -485,6 +491,7 @@ void HttpServer::initPrivate()
         PowerMeas::DeviceType deviceType = PowerMeas::getActiveDeviceType();
         String bl0939Config = PowerMeas::getConfiguration(PowerMeas::DEV_BL0939);
         String ade7953Config = PowerMeas::getConfiguration(PowerMeas::DEV_ADE7953);
+        String cse7761Config = PowerMeas::getConfiguration(PowerMeas::DEV_CSE7761);
         String stopCond1 = PowerMeas::getConditionConfig(0);
         String stopCond2 = PowerMeas::getConditionConfig(1);
         if (request->hasParam("deviceType", true))
@@ -499,6 +506,10 @@ void HttpServer::initPrivate()
         {
             ade7953Config = request->getParam("ade7953Config", true)->value();
         }
+        if (request->hasParam("cse7761Config", true))
+        {
+            cse7761Config = request->getParam("cse7761Config", true)->value();
+        }
         if (request->hasParam("powerMeasStopCond1", true))
         {
             stopCond1 = request->getParam("powerMeasStopCond1", true)->value();
@@ -510,6 +521,7 @@ void HttpServer::initPrivate()
         PowerMeas::setActiveDeviceType(deviceType);
         PowerMeas::setConfiguration(PowerMeas::DEV_BL0939, bl0939Config, deviceType == PowerMeas::DEV_BL0939);
         PowerMeas::setConfiguration(PowerMeas::DEV_ADE7953, ade7953Config, deviceType == PowerMeas::DEV_ADE7953);
+        PowerMeas::setConfiguration(PowerMeas::DEV_CSE7761, cse7761Config, deviceType == PowerMeas::DEV_CSE7761);
         PowerMeas::setConditionConfig(0, stopCond1);
         PowerMeas::setConditionConfig(1, stopCond2);
         request->send_P(200, "text/html", getHttpConfigSaved(), defaultProcessor);
@@ -761,10 +773,14 @@ String HttpServer::powerMeasConfigProcessor(const String& var)
         return "selected";
     if ((var == "POWER_MEAS_DRIVER_2") && (PowerMeas::getActiveDeviceType() == PowerMeas::DEV_ADE7953))
         return "selected";
+    if ((var == "POWER_MEAS_DRIVER_3") && (PowerMeas::getActiveDeviceType() == PowerMeas::DEV_CSE7761))
+        return "selected";
     if (var == "POWER_MEAS_BL0939_CONFIG")
         return htmlEscape(String(PowerMeas::getConfiguration(PowerMeas::DEV_BL0939)));
     if (var == "POWER_MEAS_ADE7953_CONFIG")
         return htmlEscape(String(PowerMeas::getConfiguration(PowerMeas::DEV_ADE7953)));
+    if (var == "POWER_MEAS_CSE7761_CONFIG")
+        return htmlEscape(String(PowerMeas::getConfiguration(PowerMeas::DEV_CSE7761)));
     if (var == "POWER_MEAS_STOP_COND_1")
         return htmlEscape(String(PowerMeas::getConditionConfig(0)));
     if (var == "POWER_MEAS_STOP_COND_2")

@@ -2,6 +2,7 @@
 #include <ArduinoJson.h>
 #include "bl0939.h"
 #include "ade7953.h"
+#include "cse7761.h"
 #include "time.h"
 #include "log.h"
 #include "config.h"
@@ -15,6 +16,8 @@ PowerMeas::PowerMeas() :
     m_devices.push_back(bl0939); 
     ADE7953* ade7953 = new ADE7953;
     m_devices.push_back(ade7953); 
+    CSE7761* cse7761 = new CSE7761;
+    m_devices.push_back(cse7761); 
 
     // Stop conditions defaults
     for(size_t i = 0; i < STOP_CONDITION_COUNT; i++)

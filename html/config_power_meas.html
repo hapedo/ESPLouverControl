@@ -18,6 +18,7 @@
                         <option value="0" %POWER_MEAS_DRIVER_0%>Disabled</option>
                         <option value="1" %POWER_MEAS_DRIVER_1%>BL0939</option>
                         <option value="2" %POWER_MEAS_DRIVER_2%>ADE7953</option>
+                        <option value="3" %POWER_MEAS_DRIVER_3%>CSE7761</option>
                     </select>
                     <label class="input_select_label" for="deviceType">Power measurement driver</label>
                 </div>
@@ -36,6 +37,10 @@
                 <div class="input">
                     <input type="text" class="input_field" name="ade7953Config" id = "ade7953Config" value="%POWER_MEAS_ADE7953_CONFIG%"/>
                     <label class="input_label" for="ade7953Config">ADE7953 configuration</label>
+                </div>
+                <div class="input">
+                    <input type="text" class="input_field" name="cse7761Config" id = "cse7761Config" value="%POWER_MEAS_CSE7761_CONFIG%"/>
+                    <label class="input_label" for="cse7761Config">CSE7761 configuration</label>
                 </div>
                 <button class="button" type="submit" form="powerMeasConfig" value="Submit">Save</button>
             </form>

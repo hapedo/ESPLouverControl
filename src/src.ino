@@ -1,4 +1,5 @@
 #include "log.h"
+#include "time.h"
 #include "louver.h"
 #include "http_server.h"
 #include "module.h"
@@ -23,6 +24,7 @@ void setup() {
 
 void loop() 
 {
+    Time::process();
     Module::process();
     Louver::process();
     HttpServer::process();
